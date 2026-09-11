@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="stylesheet" href="./styles.css"><style>
+body{margin:0;background:#e4ded3;font-family:Barlow,system-ui,sans-serif}
+a{color:#8c6242}a:hover{color:#6b4526}
+.pw-wrap{padding:48px;display:flex;flex-wrap:wrap;gap:44px;align-items:flex-start}
+.pw-note{max-width:460px;font:15.5px/1.7 Barlow,system-ui,sans-serif;color:rgba(38,34,29,.68);margin:0 0 14px}
+</style></helmet>
+
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#8c6242"></rect><path d="M50 72s-19-11.6-19-24.3A10.6 10.6 0 0 1 50 40a10.6 10.6 0 0 1 19 7.7C69 60.4 50 72 50 72z" fill="none" stroke="#f6f1e9" stroke-width="4" stroke-linejoin="round"></path></svg></template>
+
+<div class="pw-wrap">
+<div style="flex:0 1 430px">
+  <div style="font:500 12px/1 Barlow,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#8c6242;margin-bottom:14px">The Bridge at Calvary</div>
+  <h1 style="margin:0 0 18px;font:600 46px/1.02 Barlow,system-ui,sans-serif;letter-spacing:-.02em;color:#26221d">Prayer Wall</h1>
+  <p class="pw-note">Anyone can post a request, and the person asking chooses who sees it: <strong>the whole church</strong>, or <strong>the pastors only</strong> — lead pastor included. Church-wide requests appear on the wall for everyone; pastors-only requests never leave the staff, though the member always sees their own.</p>
+  <p class="pw-note"><strong>Pastors</strong> see every request. The <strong>lead pastor</strong> also gets admin. <strong>Edward</strong> owns the account, and the owner section exists only when he's logged in — no one else sees it, not even locked.</p>
+  <p class="pw-note"><strong>How the app knows who you are:</strong> the phone number is the account key. Sign in and it's looked up in the church directory, and your role comes back with it — member, pastor, lead pastor, or owner. Nobody picks their own role; the office sets it, and only Edward can set a lead pastor. Tap a demo account on the sign-in screen to fill a number, or type one that isn't on file to see the rejection.</p>
+  <p class="pw-note">Members go straight in. <strong>Pastors, the lead pastor, and Edward</strong> then enter a PIN, since those accounts read private requests. PINs: pastors and Daniel <strong>2026</strong>, Pastor Rachel <strong>2210</strong>, Edward <strong>00599</strong>.</p>
+  <p class="pw-note">Switch roles below and the app changes. Worth trying: as a pastor, tap <em>I prayed</em> on Miss Ruth's surgery request, then switch to Member and open Notices.</p>
+
+  <div style="font:500 11px/1 Barlow,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#8c6242;margin:22px 0 10px">Jump straight to a role (skips sign-in)</div>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px">
+    <sc-for list="{{ roleSwitch }}" as="r" hint-placeholder-count="4">
+      <button onClick="{{ r.onClick }}" style="min-height:46px;padding:0 18px;border-radius:999px;font:600 15px/1 Barlow,system-ui,sans-serif;cursor:pointer;background:{{ r.bg }};color:{{ r.fg }};border:1px solid {{ r.bc }}">{{ r.label }}</button>
+    </sc-for>
+  </div>
+  <p class="pw-note" style="color:rgba(38,34,29,.45)">No scripture anywhere — devotional content is gone with the Word tab. Names other than Edward's are placeholders; send me the real roster and staff titles and I'll set the roles.</p>
+</div>
+
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+<div style="position:relative;height:100%;display:flex;flex-direction:column;background:#f6f1e9;color:#26221d;font-family:Barlow,system-ui,sans-serif;padding-top:52px">
+
+  <div style="display:flex;align-items:center;gap:10px;padding:10px 20px 13px;border-bottom:1px solid rgba(38,34,29,.07)">
+    <img src="./assets/logo.png" alt="The Bridge at Calvary" style="height:24px;width:auto;align-self:center;mix-blend-mode:multiply">
+    <div style="flex:1;min-width:0">
+      <div style="font:600 19px/1.15 Barlow,system-ui,sans-serif;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ screenTitle }}</div>
+      <div style="font-size:13px;color:#6e675c;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ whoLine }}</div>
+    </div>
+    <button onClick="{{ goNotices }}" aria-label="Notices" style="position:relative;width:38px;height:38px;flex:none;border-radius:50%;display:grid;place-items:center;cursor:pointer;background:#fdfaf4;border:1px solid rgba(38,34,29,.12);color:#6e675c">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 15.5H6l1.5-3V9.2a4.5 4.5 0 0 1 9 0v3.3z" stroke-linejoin="round"></path><path d="M10.4 18.6a1.7 1.7 0 0 0 3.2 0"></path></svg>
+      <sc-if value="{{ hasUnread }}" hint-placeholder-val="{{ true }}">
+        <span style="position:absolute;top:-2px;right:-2px;min-width:18px;height:18px;padding:0 4px;border-radius:999px;background:#8c6242;color:#fdfaf4;font:600 11px/18px Barlow,system-ui,sans-serif;text-align:center">{{ unreadCount }}</span>
+      </sc-if>
+    </button>
+  </div>
+
+  <div ref="{{ scrollRef }}" style="flex:1;overflow:auto;padding:12px 20px 134px;display:flex;flex-direction:column;gap:14px">
+
+    <sc-if value="{{ isMine }}" hint-placeholder-val="{{ true }}">
+      <sc-if value="{{ memberIntro }}" hint-placeholder-val="{{ true }}">
+        <div style="border-radius:24px;background:linear-gradient(158deg,#3a342a,#292419);color:#f8f4ec;padding:20px;display:flex;flex-direction:column;gap:10px;box-shadow:0 10px 26px rgba(38,34,29,.16)">
+          <div style="display:flex;align-items:center;gap:8px">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#dcb98f" stroke-width="1.7"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2.5"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path></svg>
+            <span style="font:500 11px/1 Barlow,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#dcb98f">Private by default</span>
+          </div>
+          <div style="font:600 26px/1.1 Barlow,system-ui,sans-serif;letter-spacing:-.02em">You choose who sees each request.</div>
+          <p style="margin:0;font-size:16px;line-height:1.55;color:rgba(248,244,236,.75)">Share it with the whole church, or send it to the pastors only. Either way you get a note when someone prays.</p>
+        </div>
+      </sc-if>
+
+      <button onClick="{{ openCompose }}" style="display:flex;align-items:center;gap:12px;min-height:60px;padding:0 18px;border-radius:18px;background:#fdfaf4;border:0;box-shadow:0 1px 2px rgba(38,34,29,.05),0 10px 24px rgba(38,34,29,.055);cursor:pointer;text-align:left">
+        <span style="width:32px;height:32px;flex:none;border-radius:50%;background:#8c6242;color:#fdfaf4;display:grid;place-items:center;font-size:21px;line-height:1">+</span>
+        <span style="flex:1;font-size:17px;color:#6e675c">What can we pray with you about?</span>
+      </button>
+
+      <div style="font:600 12px/1 Barlow,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#8c6242;margin:12px 0 -2px">Your requests</div>
+      <sc-if value="{{ myEmpty }}" hint-placeholder-val="{{ false }}">
+        <div style="border-radius:24px;border:1px dashed rgba(38,34,29,.22);padding:20px;font-size:16px;line-height:1.55;color:#6e675c">Nothing on the wall right now. Tap the box above whenever you need prayer.</div>
+      </sc-if>
+      <sc-for list="{{ myRequests }}" as="r" hint-placeholder-count="2">
+        <div style="border-radius:24px;background:#fdfaf4;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 2px rgba(38,34,29,.05),0 10px 24px rgba(38,34,29,.055)">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="flex:1;font-size:14px;color:#6e675c">{{ r.when }} · {{ r.prayedLine }}</span>
+            <span style="padding:5px 12px;border-radius:999px;background:{{ r.stateBg }};color:{{ r.stateFg }};font:600 12px/1 Barlow,system-ui,sans-serif">{{ r.stateLabel }}</span>
+          </div>
+          <p style="margin:0;font-size:17px;line-height:1.55;text-wrap:pretty">{{ r.text }}</p>
+          <div style="font-size:14px;color:#6e675c">{{ r.seenBy }}</div>
+          <button onClick="{{ r.onAnswered }}" style="align-self:flex-start;min-height:44px;padding:0 16px;border-radius:999px;font:600 14px/1 Barlow,system-ui,sans-serif;cursor:pointer;background:{{ r.bg }};color:{{ r.fg }};border:1px solid {{ r.bc }}">{{ r.answerLabel }}</button>
+        </div>
+      </sc-for>
+
+      <div style="font:600 12px/1 Barlow,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#8c6242;margin:12px 0 -2px">Your account</div>
+      <div style="border-radius:24px;background:#fdfaf4;padding:18px;display:flex;align-items:center;gap:14px;box-shadow:0 1px 2px rgba(38,34,29,.05),0 10px 24px rgba(38,34,29,.055)">
+        <span style="width:44px;height:44px;flex:none;border-radius:50%;background:{{ meDot }};display:grid;place-items:center;font:600 17px/1 Barlow,system-ui,sans-serif;color:#fdfaf4">{{ meInitial }}</span>
+        <span style="flex:1;min-width:0">
+          <span style="display:block;font:600 18px/1.2 Barlow,system-ui,sans-serif">{{ meName }}</span>
+          <span style="display:block;font-size:14px;color:#6e675c">{{ meRole }}</span>
+        </span>
+        <button onClick="{{ toggleRemind }}" style="min-height:42px;padding:0 14px;border-radius:999px;font:600 13px/1 Barlow,system-ui,sans-serif;cursor:pointer;background:{{ remindBg }};color:{{ remindFg }};border:1px solid {{ remindBc }}">{{ remindLabel }}</button>
+      </div>
+      <button onClick="{{ signOut }}" style="min-height:52px;border-radius:999px;background:transparent;border:1px solid rgba(38,34,29,.18);color:#26221d;font:600 16px/1 Barlow,system-ui,sans-serif;cursor:pointer">Sign out</button>
+    </sc-if>
+
+    <sc-if value="{{ isWall }}" hint-placeholder-val="{{ false }}">
+      <div style="border-radius:24px;background:linear-gradient(158deg,#3a342a,#292419);color:#f8f4ec;padding:20px;display:flex;flex-direction:column;gap:11px;box-shadow:0 10px 26px rgba(38,34,29,.16)">
+        <div style="font:500 11px/1 Barlow,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#dcb98f">{{ wallKicker }}</div>
+        <div style="font:600 28px/1.08 Barlow,system-ui,sans-serif;letter-spacing:-.02em">{{ waitingLine }}</div>
+        <p style="margin:0;font-size:16px;line-height:1.5;color:rgba(248,244,236,.72)">{{ wallSub }}</p>
+        <sc-if value="{{ isLeader }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ startSession }}" style="min-height:54px;border-radius:999px;background:#f8f4ec;color:#2f2a20;border:0;font:600 17px/1 Barlow,system-ui,sans-serif;cursor:pointer;margin-top:2px">Start praying</button>
+        </sc-if>
+      </div>
+
+      <button onClick="{{ openCompose }}" style="display:flex;align-items:center;gap:12px;min-height:58px;padding:0 18px;border-radius:18px;background:#fdfaf4;border:0;box-shadow:0 1px 2px rgba(38,34,29,.05),0 10px 24px rgba(38,34,29,.055);cursor:pointer;text-align:left">
+        <span style="width:32px;height:32px;flex:none;border-radius:50%;background:#8c6242;color:#fdfaf4;display:grid;place-items:center;font-size:21px;line-height:1">+</span>
+        <span style="flex:1;font-size:17px;color:#6e675c">Add a request of your own</span>
+      </button>
+
+      <div style="display:flex;gap:8px">
+        <sc-for list="{{ wallFilters }}" as="c" hint-placeholder-count="3">
+          <button onClick="{{ c.onClick }}" style="flex:1;min-height:44px;border-radius:999px;font:600 14px/1 Barlow,system-ui,sans-serif;cursor:pointer;background:{{ c.bg }};color:{{ c.fg }};border:1px solid {{ c.bc }}">{{ c.label }}</button>
+        </sc-for>
+      </div>
+
+      <sc-for list="{{ feed }}" as="p" hint-placeholder-count="5">
+        <div style="border-radius:24px;background:#fdfaf4;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 2px rgba(38,34,29,.05),0 10px 24px rgba(38,34,29,.055)">
+          <div style="display:flex;align-items:center;gap:12px">
+            <span style="width:40px;height:40px;flex:none;border-radius:50%;background:{{ p.dot }};display:grid;place-items:center;font:600 16px/1 Barlow,system-ui,sans-serif;color:#fdfaf4">{{ p.initial }}</span>
+            <span style="flex:1;min-width:0">
+              <span style="display:block;font:600 17px/1.2 Barlow,system-ui,sans-serif;letter-spacing:-.01em">{{ p.name }}</span>
+              <span style="display:block;font-size:14px;color:#6e675c">{{ p.when }} · {{ p.audience }}</span>
+            </span>
+            <span style="flex:none;padding:5px 12px;border-radius:999px;background:{{ p.tagBg }};color:{{ p.tagFg }};font:600 12px/1 Barlow,system-ui,sans-serif">{{ p.tag }}</span>
+          </div>
+          <p style="margin:0;font-size:17px;line-height:1.55;text-wrap:pretty">{{ p.text }}</p>
+          <div style="display:flex;align-items:center;gap:10px">
+            <button onClick="{{ p.onPray }}" style="min-height:46px;padding:0 18px;border-radius:999px;font:600 15px/1 Barlow,system-ui,sans-serif;cursor:pointer;background:{{ p.bg }};color:{{ p.fg }};border:1px solid {{ p.bc }}">{{ p.label }}</button>
+            <span style="flex:1;font-size:14px;color:#6e675c">{{ p.countLine }}</span>
+          </div>
+        </div>
+      </sc-for>
+    </sc-if>
+
+    <sc-if value="{{ isPray }}" hint-placeholder-val="{{ false }}">
+      <sc-if value="{{ prayIdle }}" hint-placeholder-val="{{ true }}">
+        <p style="margin:0;font-size:18px;line-height:1.55;color:#6e675c">A guided walk through the requests, one person at a time. Everyone you pray for gets a note that you did.</p>
+        <div style="border-radius:24px;background:#fdfaf4;padding:22px;display:flex;flex-direction:column;gap:8px;box-shadow:0 1px 2px rgba(38,34,29,.05),0 10px 24px rgba(38,34,29,.055)">
+          <div style="font:500 11px/1 Barlow,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#8c6242">Waiting on prayer</div>
+          <div style="font:600 56px/1 Barlow,system-ui,sans-serif;letter-spacing:-.03em">{{ waitingCount }}</div>
+          <div style="font-size:17px;line-height:1.5;color:#6e675c">{{ waitingNames }}</div>
+          <button onClick="{{ startSession }}" style="min-height:56px;border-radius:999px;background:#8c6242;color:#f8f4ec;border:0;font:600 18px/1 Barlow,system-ui,sans-serif;cursor:pointer;margin-top:10px">Begin</button>
+        </div>
+        <div style="border-radius:24px;background:transparent;border:1px solid rgba(140,98,66,.3);padding:20px;display:flex;flex-direction:column;gap:8px">
+          <div style="font:500 11px/1 Barlow,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#8c6242">No pressure</div>
+          <p style="margin:0;font-size:17px;line-height:1.6">You don't have to finish the list, and you don't have to say it well. Read a name, hold it a moment, move on.</p>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ prayActive }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="flex:1;height:6px;border-radius:999px;background:rgba(38,34,29,.1);overflow:hidden">
+            <div style="height:100%;border-radius:999px;background:#8c6242;width:{{ sessionPct }}"></div>
+          </div>
+          <span style="font-size:14px;color:#6e675c">{{ sessionStep }}</span>
+          <sc-if value="{{ showTimer }}" hint-placeholder-val="{{ false }}">
+            <span style="font-size:14px;font-variant-numeric:tabular-nums;color:#8c6242">{{ sessionClock }}</span>
+          </sc-if>
+        </div>
+        <div style="border-radius:24px;background:#fdfaf4;padding:28px 22px;display:flex;flex-direction:column;gap:16px;align-items:center;text-align:center;box-shadow:0 2px 4px rgba(38,34,29,.05),0 16px 34px rgba(38,34,29,.08)">
+          <span style="width:60px;height:60px;border-radius:50%;background:{{ curDot }};display:grid;place-items:center;font:600 23px/1 Barlow,system-ui,sans-serif;color:#fdfaf4">{{ curInitial }}</span>
+          <div style="font:600 19px/1.2 Barlow,system-ui,sans-serif;letter-spacing:-.01em">{{ curName }}</div>
+          <p style="margin:0;font-size:22px;line-height:1.45;text-wrap:pretty">{{ curText }}</p>
+        </div>
+        <sc-if value="{{ showPrompt }}" hint-placeholder-val="{{ false }}">
+          <div style="border-radius:24px;background:rgba(140,98,66,.1);padding:20px;display:flex;flex-direction:column;gap:8px">
+            <div style="font:500 11px/1 Barlow,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#8c6242">Something to pray</div>
+            <p style="margin:0;font-size:18px;line-height:1.55">{{ curPrompt }}</p>
+          </div>
+        </sc-if>
+        <button onClick="{{ nextInSession }}" style="min-height:58px;border-radius:999px;background:#8c6242;color:#f8f4ec;border:0;font:600 18px/1 Barlow,system-ui,sans-serif;cursor:pointer">{{ nextLabel }}</button>
+        <div style="display:flex;gap:10px">
+          <button onClick="{{ skipInSession }}" style="flex:1;min-height:48px;border-radius:999px;background:transparent;border:1px solid rgba(38,34,29,.18);color:#26221d;font:600 15px/1 Barlow,system-ui,sans-serif;cursor:pointer">Skip for now</button>
+          <button onClick="{{ endSession }}" style="flex:1;min-height:48px;border-radius:999px;background:transparent;border:1px solid transparent;color:#6e675c;font:600 15px/1 Barlow,system-ui,sans-serif;cursor:pointer">End here</button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ prayDone }}" hint-placeholder-val="{{ false }}">
+        <div style="border-radius:24px;background:linear-gradient(158deg,#3a342a,#292419);color:#f8f4ec;padding:26px 22px;display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center;box-shadow:0 10px 26px rgba(38,34,29,.16)">
+          <div style="font:500 11px/1 Barlow,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#dcb98f">Amen</div>
+          <div style="font:600 32px/1.08 Barlow,system-ui,sans-serif;letter-spacing:-.02em">{{ doneLine }}</div>
+          <p style="margin:0;font-size:16px;line-height:1.55;color:rgba(248,244,236,.75)">{{ doneSub }}</p>
+        </div>
+        <button onClick="{{ goWall }}" style="min-height:54px;border-radius:999px;background:#8c6242;color:#f8f4ec;border:0;font:600 17px/1 Barlow,system-ui,sans-serif;cursor:pointer">Back to requests</button>
+      </sc-if>
+    </sc-if>
+
+    <sc-if value="{{ isNotices }}" hint-placeholder-val="{{ false }}">
+      <sc-if value="{{ noticesEmpty }}" hint-placeholder-val="{{ false }}">
+        <div style="border-radius:24px;border:1px dashed rgba(38,34,29,.22);padding:22px;font-size:16px;line-height:1.6;color:#6e675c">Nothing yet. When a pastor prays for one of your requests, it shows up here.</div>
+      </sc-if>
+      <sc-for list="{{ notices }}" as="n" hint-placeholder-count="3">
+        <div style="border-radius:24px;background:{{ n.cardBg }};padding:18px;display:flex;gap:14px;box-shadow:0 1px 2px rgba(38,34,29,.05),0 10px 24px rgba(38,34,29,.055)">
+          <span style="width:40px;height:40px;flex:none;border-radius:50%;background:{{ n.dot }};display:grid;place-items:center;color:#fdfaf4">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M5 12.5l4.2 4.2L19 7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          </span>
+          <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:5px">
+            <span style="font:600 18px/1.25 Barlow,system-ui,sans-serif;letter-spacing:-.01em">{{ n.title }}</span>
+            <span style="font-size:16px;line-height:1.5;color:#6e675c">{{ n.body }}</span>
+            <span style="font-size:14px;color:#6e675c">{{ n.when }}</span>
+          </span>
+          <sc-if value="{{ n.unread }}" hint-placeholder-val="{{ true }}">
+            <span style="width:9px;height:9px;flex:none;margin-top:6px;border-radius:50%;background:#8c6242"></span>
+          </sc-if>
+        </div>
+      </sc-for>
+      <sc-if value="{{ hasUnread }}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{ markAllRead }}" style="min-height:50px;border-radius:999px;background:transparent;border:1px solid rgba(38,34,29,.18);color:#26221d;font:600 16px/1 Barlow,system-ui,sans-serif;cursor:pointer">Mark all read</button>
+      </sc-if>
+    </sc-if>
+
+    <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
+      <div style="border-radius:24px;background:linear-gradient(158deg,#3a342a,#292419);color:#f8f4ec;padding:20px;display:flex;flex-direction:column;gap:10px;box-shadow:0 10px 26px rgba(38,34,29,.16)">
+        <div style="font:500 11px/1 Barlow,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#dcb98f">{{ adminKicker }}</div>
+        <div style="font:600 27px/1.08 Barlow,system-ui,sans-serif;letter-spacing:-.02em">{{ adminTitle }}</div>
+        <p style="margin:0;font-size:16px;line-height:1.55;color:rgba(248,244,236,.75)">{{ adminSub }}</p>
+      </div>
+
+      <div ref="{{ peopleRef }}" style="font:600 12px/1 Barlow,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#8c6242;margin:12px 0 -2px">People</div>
+      <sc-for list="{{ people }}" as="m" hint-placeholder-count="5">
+        <div style="display:flex;align-items:center;gap:12px;border-radius:18px;background:#fdfaf4;padding:14px 16px;box-shadow:0 1px 2px rgba(38,34,29,.05),0 10px 24px rgba(38,34,29,.055)">
+          <span style="width:38px;height:38px;flex:none;border-radius:50%;background:{{ m.dot }};display:grid;place-items:center;font:600 15px/1 Barlow,system-ui,sans-serif;color:#fdfaf4">{{ m.initial }}</span>
+          <span style="flex:1;min-width:0">
+            <span style="display:block;font:600 17px/1.2 Barlow,system-ui,sans-serif">{{ m.name }}</span>
+            <span style="display:block;font-size:14px;color:#6e675c">{{ m.role }}</span>
+          </span>
+          <button onClick="{{ m.onChange }}" style="min-height:40px;padding:0 13px;border-radius:999px;font:600 13px/1 Barlow,system-ui,sans-serif;cursor:pointer;background:{{ m.btnBg }};color:{{ m.btnFg }};border:1px solid {{ m.btnBc }}">{{ m.btnLabel }}</button>
+        </div>
+      </sc-for>
+
+      <div style="font:600 12px/1 Barlow,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#8c6242;margin:12px 0 -2px">Who can do what</div>
+      <div style="border-radius:24px;background:#fdfaf4;padding:6px 14px 12px;box-shadow:0 1px 2px rgba(38,34,29,.05),0 10px 24px rgba(38,34,29,.055)">
+        <div style="display:grid;grid-template-columns:1fr 46px 46px 46px;gap:6px;padding:12px 0 8px;border-bottom:1px solid rgba(38,34,29,.1)">
+          <span style="font-size:13px;color:#6e675c">Capability</span>
+          <span style="font:600 12px/1.2 Barlow,system-ui,sans-serif;color:#6e675c;text-align:center">Mem</span>
+          <span style="font:600 12px/1.2 Barlow,system-ui,sans-serif;color:#6e675c;text-align:center">Past</span>
+          <span style="font:600 12px/1.2 Barlow,system-ui,sans-serif;color:#6e675c;text-align:center">Lead</span>
+        </div>
+        <sc-for list="{{ matrix }}" as="row" hint-placeholder-count="7">
+          <div style="display:grid;grid-template-columns:1fr 46px 46px 46px;gap:6px;align-items:center;padding:11px 0;border-bottom:1px solid rgba(38,34,29,.07)">
+            <span style="font-size:15px;line-height:1.35">{{ row.cap }}</span>
+            <span style="text-align:center;font-size:15px;color:{{ row.mInk }}">{{ row.m }}</span>
+            <span style="text-align:center;font-size:15px;color:{{ row.pInk }}">{{ row.p }}</span>
+            <span style="text-align:center;font-size:15px;color:{{ row.lInk }}">{{ row.l }}</span>
+          </div>
+        </sc-for>
+        <div style="padding:12px 0 4px;font-size:14px;line-height:1.5;color:#6e675c">Edward, as owner, can do everything in this table plus the owner-only actions below.</div>
+      </div>
+
+      <div style="font:600 12px/1 Barlow,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#8c6242;margin:12px 0 -2px">Church-wide</div>
+      <button onClick="{{ broadcast }}" style="display:flex;align-items:center;gap:12px;min-height:58px;padding:0 18px;border-radius:18px;background:#fdfaf4;border:0;box-shadow:0 1px 2px rgba(38,34,29,.05),0 10px 24px rgba(38,34,29,.055);cursor:pointer;text-align:left">
+        <span style="flex:1;font-size:17px">Send a notice to the whole church</span>
+        <span style="color:#8c6242;font-size:20px">›</span>
+      </button>
+      <button onClick="{{ exportData }}" style="display:flex;align-items:center;gap:12px;min-height:58px;padding:0 18px;border-radius:18px;background:#fdfaf4;border:0;box-shadow:0 1px 2px rgba(38,34,29,.05),0 10px 24px rgba(38,34,29,.055);cursor:pointer;text-align:left">
+        <span style="flex:1;font-size:17px">Export the prayer log</span>
+        <span style="color:#8c6242;font-size:20px">›</span>
+      </button>
+
+      <sc-if value="{{ isOwner }}" hint-placeholder-val="{{ false }}">
+        <div style="font:600 12px/1 Barlow,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#8c6242;margin:12px 0 -2px">Owner</div>
+        <div style="border-radius:24px;background:rgba(140,98,66,.1);border:1px solid rgba(140,98,66,.35);padding:18px;display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;align-items:center;gap:9px">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#6b4526" stroke-width="1.7"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2.5"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path></svg>
+            <span style="font:500 11px/1 Barlow,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#6b4526">Only you can see this</span>
+          </div>
+          <sc-for list="{{ ownerActions }}" as="a" hint-placeholder-count="4">
+            <button onClick="{{ a.onClick }}" style="display:flex;align-items:center;gap:12px;min-height:52px;padding:0 16px;border-radius:16px;background:#fdfaf4;border:1px solid rgba(140,98,66,.25);cursor:pointer;text-align:left">
+              <span style="flex:1;font-size:16px;color:#26221d">{{ a.label }}</span>
+              <span style="font-size:15px;color:#8c6242">{{ a.hint }}</span>
+            </button>
+          </sc-for>
+        </div>
+      </sc-if>
+    </sc-if>
+
+  </div>
+
+  <sc-if value="{{ toastOn }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:20px;right:20px;bottom:108px;z-index:60;border-radius:18px;background:linear-gradient(158deg,#3a342a,#292419);color:#f8f4ec;padding:14px 16px;font-size:15px;line-height:1.45;box-shadow:0 10px 26px rgba(38,34,29,.26)">{{ toast }}</div>
+  </sc-if>
+
+  <div style="position:absolute;left:14px;right:14px;bottom:28px;display:grid;gap:3px;padding:7px;border-radius:26px;background:rgba(253,250,244,.92);backdrop-filter:blur(14px);border:1px solid rgba(38,34,29,.06);box-shadow:0 1px 2px rgba(38,34,29,.06),0 14px 30px rgba(38,34,29,.14);grid-template-columns:{{ tabCols }}">
+    <button onClick="{{ goWall }}" style="min-height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border-radius:19px;border:0;cursor:pointer;font:600 11.5px/1 Barlow,system-ui,sans-serif;letter-spacing:.01em;background:{{ bWall }};color:{{ tWall }}">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3.5 11.2L12 4.2l8.5 7v8.6h-17z" stroke-linejoin="round"></path></svg>Home
+    </button>
+    <sc-if value="{{ isLeader }}" hint-placeholder-val="{{ false }}">
+      <button onClick="{{ goPray }}" style="min-height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border-radius:19px;border:0;cursor:pointer;font:600 11.5px/1 Barlow,system-ui,sans-serif;letter-spacing:.01em;background:{{ bPray }};color:{{ tPray }}">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 20s-7.5-4.6-7.5-9.6A4.2 4.2 0 0 1 12 7.2a4.2 4.2 0 0 1 7.5 3.2C19.5 15.4 12 20 12 20z" stroke-linejoin="round"></path></svg>Pray
+      </button>
+    </sc-if>
+    <button onClick="{{ goMine }}" style="min-height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border-radius:19px;border:0;cursor:pointer;font:600 11.5px/1 Barlow,system-ui,sans-serif;letter-spacing:.01em;background:{{ bMine }};color:{{ tMine }}">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8.5" r="3.4"></circle><path d="M5 20a7 7 0 0 1 14 0"></path></svg>Mine
+    </button>
+    <button onClick="{{ goNotices }}" style="min-height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border-radius:19px;border:0;cursor:pointer;font:600 11.5px/1 Barlow,system-ui,sans-serif;letter-spacing:.01em;background:{{ bNotices }};color:{{ tNotices }}">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 15.5H6l1.5-3V9.2a4.5 4.5 0 0 1 9 0v3.3z" stroke-linejoin="round"></path><path d="M10.4 18.6a1.7 1.7 0 0 0 3.2 0"></path></svg>Notices
+    </button>
+    <sc-if value="{{ canAdmin }}" hint-placeholder-val="{{ false }}">
+      <button onClick="{{ goAdmin }}" style="min-height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border-radius:19px;border:0;cursor:pointer;font:600 11.5px/1 Barlow,system-ui,sans-serif;letter-spacing:.01em;background:{{ bAdmin }};color:{{ tAdmin }}">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M11 4h2l.4 2.2 1.9.8 1.9-1.2 1.4 1.4-1.2 1.9.8 1.9L20.4 11v2l-2.2.4-.8 1.9 1.2 1.9-1.4 1.4-1.9-1.2-1.9.8L13 20.4h-2l-.4-2.2-1.9-.8-1.9 1.2-1.4-1.4 1.2-1.9-.8-1.9L3.6 13v-2l2.2-.4.8-1.9L5.4 6.8 6.8 5.4l1.9 1.2 1.9-.8z"></path><circle cx="12" cy="12" r="2.6"></circle></svg>Admin
+      </button>
+    </sc-if>
+  </div>
+
+  <sc-if value="{{ isSignin }}" hint-placeholder-val="{{ true }}">
+    <div style="position:absolute;inset:0;z-index:80;background:radial-gradient(120% 60% at 50% 0%,#fbf7f0,#f2ece1 70%);display:flex;flex-direction:column;overflow:auto;padding:64px 22px 28px">
+      <div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px">
+        <img src="./assets/logo.png" alt="The Bridge at Calvary" style="height:104px;width:auto;mix-blend-mode:multiply">
+        <div style="font:500 11px/1 Barlow,system-ui,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#8c6242;margin-top:2px">Prayer Wall</div>
+        <div style="font:600 30px/1.06 Barlow,system-ui,sans-serif;letter-spacing:-.02em;margin-top:6px">{{ signinTitle }}</div>
+        <p style="margin:0;max-width:300px;font-size:16px;line-height:1.55;color:#6e675c;text-wrap:pretty">{{ signinBlurb }}</p>
+      </div>
+
+      <div style="margin-top:22px;border-radius:24px;background:#fdfaf4;border:1px solid rgba(38,34,29,.07);padding:18px;display:flex;flex-direction:column;gap:14px;box-shadow:0 1px 2px rgba(38,34,29,.05),0 12px 28px rgba(38,34,29,.07)">
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <label for="pw-name" style="font:600 12px/1 Barlow,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#6e675c">Your name</label>
+          <input id="pw-name" class="input" value="{{ signinId }}" onChange="{{ onSigninId }}" placeholder="{{ namePlaceholder }}" style="min-height:54px;border-radius:16px;background:#f6f1e9;border:1px solid rgba(38,34,29,.12);font-size:18px;padding:0 15px">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <label for="pw-phone" style="font:600 12px/1 Barlow,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#6e675c">Phone number</label>
+          <input id="pw-phone" class="input" inputMode="tel" value="{{ phone }}" onChange="{{ onPhone }}" placeholder="(281) 555-0134" style="min-height:54px;border-radius:16px;background:#f6f1e9;border:1px solid rgba(38,34,29,.12);font-size:18px;padding:0 15px">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <label for="pw-pass" style="font:600 12px/1 Barlow,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#6e675c">{{ passLabel }}</label>
+          <input id="pw-pass" class="input" type="password" value="{{ signinPass }}" onChange="{{ onSigninPass }}" style="min-height:54px;border-radius:16px;background:#f6f1e9;border:1px solid rgba(38,34,29,.12);font-size:18px;padding:0 15px">
+          <div style="font-size:14px;line-height:1.45;color:#6e675c">{{ passHint }}</div>
+        </div>
+      </div>
+
+      <sc-if value="{{ hasSigninErr }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:12px;border-radius:16px;background:rgba(166,74,45,.1);border:1px solid rgba(166,74,45,.3);padding:13px 15px;font-size:15px;line-height:1.5;color:#8a3f24">{{ signinErr }}</div>
+      </sc-if>
+
+      <button onClick="{{ doSignIn }}" style="margin-top:16px;min-height:58px;border-radius:999px;background:#8c6242;color:#f8f4ec;border:0;font:600 18px/1 Barlow,system-ui,sans-serif;cursor:pointer;box-shadow:0 8px 20px rgba(140,98,66,.28)">{{ signinCta }}</button>
+      <button onClick="{{ textCode }}" style="margin-top:10px;min-height:52px;border-radius:999px;background:transparent;border:1px solid rgba(38,34,29,.2);color:#26221d;font:600 16px/1 Barlow,system-ui,sans-serif;cursor:pointer">Text a code to this number</button>
+
+      <div style="margin-top:22px;font:600 12px/1 Barlow,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#8c6242">Demo accounts — tap to fill</div>
+      <div style="margin-top:10px;display:flex;flex-direction:column;gap:7px">
+        <sc-for list="{{ directory }}" as="d" hint-placeholder-count="5">
+          <button onClick="{{ d.onUse }}" style="display:flex;align-items:center;gap:10px;min-height:52px;padding:0 15px;border-radius:16px;background:#fdfaf4;border:1px solid rgba(38,34,29,.09);cursor:pointer;text-align:left">
+            <span style="flex:1;min-width:0">
+              <span style="display:block;font:600 16px/1.2 Barlow,system-ui,sans-serif">{{ d.name }}</span>
+              <span style="display:block;font-size:13px;color:#6e675c">{{ d.phone }}</span>
+            </span>
+            <span style="flex:none;padding:5px 11px;border-radius:999px;background:rgba(140,98,66,.12);color:#6b4526;font:600 12px/1 Barlow,system-ui,sans-serif">{{ d.role }}</span>
+          </button>
+        </sc-for>
+      </div>
+      <div style="margin-top:18px;text-align:center;font-size:14px;line-height:1.55;color:#6e675c">{{ signinHint }}</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isCodeStep }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;z-index:80;background:#f6f1e9;display:flex;flex-direction:column;padding:70px 24px 30px">
+      <div style="font:500 11px/1 Barlow,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#8c6242">One-time sign in</div>
+      <div style="font:600 30px/1.06 Barlow,system-ui,sans-serif;letter-spacing:-.02em;margin-top:14px">Check your phone</div>
+      <p style="margin:10px 0 0;font-size:17px;line-height:1.55;color:#6e675c">We texted a six-digit code to {{ phoneMasked }}. It works once and expires in ten minutes.</p>
+
+      <div style="display:flex;gap:9px;justify-content:center;margin:26px 0 6px">
+        <sc-for list="{{ codeBoxes }}" as="b" hint-placeholder-count="6">
+          <span style="width:44px;height:56px;border-radius:14px;background:#fdfaf4;border:1.5px solid {{ b.bc }};display:grid;place-items:center;font:600 24px/1 Barlow,system-ui,sans-serif;color:#26221d">{{ b.ch }}</span>
+        </sc-for>
+      </div>
+      <div style="min-height:26px;text-align:center;font-size:15px;color:{{ codeMsgInk }}">{{ codeMsg }}</div>
+
+      <div style="margin-top:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+        <sc-for list="{{ codeKeys }}" as="k" hint-placeholder-count="12">
+          <button onClick="{{ k.onClick }}" style="min-height:60px;border-radius:20px;background:{{ k.bg }};border:1px solid rgba(38,34,29,.12);color:#26221d;font:600 23px/1 Barlow,system-ui,sans-serif;cursor:pointer">{{ k.label }}</button>
+        </sc-for>
+      </div>
+      <button onClick="{{ backToSignin }}" style="margin-top:12px;min-height:48px;border-radius:999px;background:transparent;border:0;color:#6e675c;font:600 15px/1 Barlow,system-ui,sans-serif;cursor:pointer">Use my password instead</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isPinStep }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;z-index:80;background:linear-gradient(158deg,#3a342a,#292419);color:#f8f4ec;display:flex;flex-direction:column;padding:70px 24px 28px">
+      <div style="display:flex;align-items:center;gap:9px">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#dcb98f" stroke-width="1.7"><rect x="4.5" y="10.5" width="15" height="9.5" rx="2.5"></rect><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"></path></svg>
+        <span style="font:500 11px/1 Barlow,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#dcb98f">{{ pinKicker }}</span>
+      </div>
+      <div style="font:600 30px/1.06 Barlow,system-ui,sans-serif;letter-spacing:-.02em;margin-top:14px">Enter your PIN</div>
+      <p style="margin:10px 0 0;font-size:16px;line-height:1.55;color:rgba(248,244,236,.75)">{{ pinWho }} can see every request in the church, so this second step is required each time.</p>
+
+      <div style="display:flex;gap:12px;justify-content:center;margin:30px 0 6px">
+        <sc-for list="{{ pinDots }}" as="d" hint-placeholder-count="4">
+          <span style="width:18px;height:18px;border-radius:50%;background:{{ d.bg }};border:1.5px solid {{ d.bc }}"></span>
+        </sc-for>
+      </div>
+      <div style="min-height:26px;text-align:center;font-size:15px;color:{{ pinMsgInk }}">{{ pinMsg }}</div>
+
+      <div style="margin-top:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+        <sc-for list="{{ pinKeys }}" as="k" hint-placeholder-count="12">
+          <button onClick="{{ k.onClick }}" style="min-height:62px;border-radius:20px;background:{{ k.bg }};border:1px solid rgba(248,244,236,.16);color:#f8f4ec;font:600 23px/1 Barlow,system-ui,sans-serif;cursor:pointer">{{ k.label }}</button>
+        </sc-for>
+      </div>
+      <button onClick="{{ backToSignin }}" style="margin-top:14px;min-height:48px;border-radius:999px;background:transparent;border:0;color:rgba(248,244,236,.7);font:600 15px/1 Barlow,system-ui,sans-serif;cursor:pointer">Not you? Sign out</button>
+    </div>
+  </sc-if>
+
+
+  <sc-if value="{{ adminModalOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;z-index:75;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(38,34,29,.42)">
+      <div onClick="{{ closeAdminModal }}" style="flex:1"></div>
+      <div style="border-radius:24px 24px 0 0;background:#f6f1e9;padding:20px 20px 34px;display:flex;flex-direction:column;gap:14px;max-height:82%;overflow:auto;box-shadow:0 -10px 30px rgba(38,34,29,.2)">
+        <div style="width:44px;height:5px;border-radius:999px;background:rgba(38,34,29,.18);align-self:center"></div>
+
+        <sc-if value="{{ isBroadcastModal }}" hint-placeholder-val="{{ false }}">
+          <div style="font:600 24px/1.1 Barlow,system-ui,sans-serif;letter-spacing:-.02em">Notice to the whole church</div>
+          <p style="margin:0;font-size:15px;line-height:1.5;color:#6e675c">Every member and staff account gets this in Notices.</p>
+          <textarea class="input" placeholder="What should the church know?" value="{{ broadcastText }}" onChange="{{ onBroadcastText }}" style="min-height:110px;border-radius:18px;background:#fdfaf4;border:1px solid rgba(38,34,29,.12);font-size:17px;line-height:1.5;padding:14px"></textarea>
+          <button onClick="{{ sendBroadcast }}" disabled="{{ broadcastBlocked }}" style="min-height:56px;border-radius:999px;background:#8c6242;color:#f8f4ec;border:0;font:600 18px/1 Barlow,system-ui,sans-serif;cursor:pointer">Send to everyone</button>
+        </sc-if>
+
+        <sc-if value="{{ isExportModal }}" hint-placeholder-val="{{ false }}">
+          <div style="font:600 24px/1.1 Barlow,system-ui,sans-serif;letter-spacing:-.02em">Export the prayer log</div>
+          <p style="margin:0;font-size:15px;line-height:1.5;color:#6e675c">{{ exportCount }} requests on file, {{ exportPrayedCount }} prayed for.</p>
+          <button onClick="{{ downloadExport }}" style="min-height:56px;border-radius:999px;background:#8c6242;color:#f8f4ec;border:0;font:600 18px/1 Barlow,system-ui,sans-serif;cursor:pointer">Download CSV</button>
+        </sc-if>
+
+        <sc-if value="{{ isTransferModal }}" hint-placeholder-val="{{ false }}">
+          <div style="font:600 24px/1.1 Barlow,system-ui,sans-serif;letter-spacing:-.02em">Transfer ownership</div>
+          <p style="margin:0;font-size:15px;line-height:1.5;color:#6e675c">Pick who takes over. You will drop to lead pastor.</p>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ transferChoices }}" as="t" hint-placeholder-count="4">
+              <button onClick="{{ t.onClick }}" style="display:flex;align-items:center;gap:12px;min-height:54px;padding:0 16px;border-radius:16px;background:{{ t.bg }};border:1px solid {{ t.bc }};cursor:pointer;text-align:left">
+                <span style="flex:1;font-size:16px;color:#26221d">{{ t.label }}</span>
+                <sc-if value="{{ t.picked }}" hint-placeholder-val="{{ false }}"><span style="color:#8c6242">✓</span></sc-if>
+              </button>
+            </sc-for>
+          </div>
+          <button onClick="{{ confirmTransfer }}" disabled="{{ transferBlocked }}" style="min-height:56px;border-radius:999px;background:#8c6242;color:#f8f4ec;border:0;font:600 18px/1 Barlow,system-ui,sans-serif;cursor:pointer">Confirm transfer</button>
+        </sc-if>
+
+        <sc-if value="{{ isBillingModal }}" hint-placeholder-val="{{ false }}">
+          <div style="font:600 24px/1.1 Barlow,system-ui,sans-serif;letter-spacing:-.02em">Billing</div>
+          <div style="border-radius:18px;background:#fdfaf4;padding:16px;display:flex;flex-direction:column;gap:6px">
+            <div style="font-size:17px">Church plan · $29/month</div>
+            <div style="font-size:14px;color:#6e675c">Next charge Oct 9 · {{ billingCard }}</div>
+          </div>
+          <button onClick="{{ updateCard }}" style="min-height:52px;border-radius:999px;background:transparent;border:1px solid rgba(38,34,29,.2);color:#26221d;font:600 16px/1 Barlow,system-ui,sans-serif;cursor:pointer">Update payment method</button>
+        </sc-if>
+
+        <sc-if value="{{ isDeleteModal }}" hint-placeholder-val="{{ false }}">
+          <div style="font:600 24px/1.1 Barlow,system-ui,sans-serif;letter-spacing:-.02em;color:#8a3f24">Delete the church account</div>
+          <p style="margin:0;font-size:15px;line-height:1.5;color:#6e675c">This removes every request, notice, and login. Type DELETE to confirm.</p>
+          <input class="input" value="{{ deleteText }}" onChange="{{ onDeleteText }}" placeholder="DELETE" style="min-height:52px;border-radius:16px;background:#fdfaf4;border:1px solid rgba(38,34,29,.14);font-size:17px;padding:0 15px">
+          <button onClick="{{ confirmDelete }}" disabled="{{ deleteBlocked }}" style="min-height:56px;border-radius:999px;background:#8a3f24;color:#f8f4ec;border:0;font:600 18px/1 Barlow,system-ui,sans-serif;cursor:pointer">Delete permanently</button>
+        </sc-if>
+
+        <button onClick="{{ closeAdminModal }}" style="min-height:46px;border-radius:999px;background:transparent;border:0;color:#6e675c;font:600 15px/1 Barlow,system-ui,sans-serif;cursor:pointer">Cancel</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ composeOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;z-index:70;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(38,34,29,.42)">
+      <div onClick="{{ closeCompose }}" style="flex:1"></div>
+      <div style="border-radius:30px 30px 0 0;background:#f6f1e9;padding:20px 20px 34px;display:flex;flex-direction:column;gap:14px;box-shadow:0 -10px 30px rgba(38,34,29,.2)">
+        <div style="width:44px;height:5px;border-radius:999px;background:rgba(38,34,29,.18);align-self:center"></div>
+        <div style="font:600 24px/1.1 Barlow,system-ui,sans-serif;letter-spacing:-.02em">Ask for prayer</div>
+        <textarea class="input" placeholder="Say it plain. We'll pray it." value="{{ draft }}" onChange="{{ onDraft }}" style="min-height:110px;border-radius:18px;background:#fdfaf4;border:1px solid rgba(38,34,29,.12);font-size:17px;line-height:1.5;padding:14px"></textarea>
+        <div style="font-size:14px;color:#6e675c">Who sees it</div>
+        <div style="display:flex;gap:8px">
+          <sc-for list="{{ audienceOpts }}" as="a" hint-placeholder-count="2">
+            <button onClick="{{ a.onClick }}" style="flex:1;min-height:48px;border-radius:999px;font:600 14px/1 Barlow,system-ui,sans-serif;cursor:pointer;background:{{ a.bg }};color:{{ a.fg }};border:1px solid {{ a.bc }}">{{ a.label }}</button>
+          </sc-for>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <sc-for list="{{ tagPicks }}" as="t" hint-placeholder-count="7">
+            <button onClick="{{ t.onClick }}" style="min-height:42px;padding:0 14px;border-radius:999px;font:600 14px/1 Barlow,system-ui,sans-serif;cursor:pointer;background:{{ t.bg }};color:{{ t.fg }};border:1px solid {{ t.bc }}">{{ t.label }}</button>
+          </sc-for>
+        </div>
+        <button onClick="{{ postPrayer }}" disabled="{{ postBlocked }}" style="min-height:56px;border-radius:999px;background:#8c6242;color:#f8f4ec;border:0;font:600 18px/1 Barlow,system-ui,sans-serif;cursor:pointer">{{ sendLabel }}</button>
+        <button onClick="{{ closeCompose }}" style="min-height:46px;border-radius:999px;background:transparent;border:0;color:#6e675c;font:600 15px/1 Barlow,system-ui,sans-serif;cursor:pointer">Not now</button>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showPrompt&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Prayer session&quot;},&quot;showTimer&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Prayer session&quot;}}">
+class Component extends DCLogic {
+  ROLES = {
+    member: { label: 'Member', name: 'Beverly', title: 'Member · Sunday School', leader: false, admin: false, owner: false },
+    pastor: { label: 'Pastor', name: 'Pastor Emily', title: 'Pastor', leader: true, admin: false, owner: false },
+    ag: { label: 'Ag minister', name: 'Daniel', title: 'Agricultural minister', leader: true, admin: false, owner: false },
+    lead: { label: 'Lead pastor', name: 'Pastor Rachel', title: 'Lead pastor · admin', leader: true, admin: true, owner: false },
+    owner: { label: 'Edward (owner)', name: 'Edward', title: 'Owner · full control', leader: true, admin: true, owner: true }
+  };
+
+  TAGS = ['Sickness', 'Work', 'Family', 'Grief', 'Travel', 'Waiting', 'Thanks'];
+
+  PROMPTS = {
+    Sickness: 'Ask for steady hands on the doctors, rest through the night, and company in the waiting room.',
+    Work: 'Ask for a clear head, an open door, and provision that comes before the worry does.',
+    Family: 'Ask for patience under one roof, and that this house be a place people are glad to come back to.',
+    Grief: 'You do not need words here. Sit with them a minute and ask that they not be left alone in it.',
+    Travel: 'Ask for safe roads, alert eyes, and a good welcome on the other end.',
+    Waiting: 'Ask for strength that outlasts the delay, and peace while nothing seems to move.',
+    Thanks: 'Say thank you plainly, and name what it cost to wait for it.'
+  };
+
+  DOTS = ['#8c6242', '#6b7a52', '#2f2a20', '#a8734a', '#5d6b7a', '#7a5f8c'];
+
+  FEED = [
+    { id: 'p1', owner: 'Beverly', when: '2 hours ago', tag: 'Sickness', kind: 'Requests', audience: 'Whole church', count: 3, text: 'Surgery Tuesday morning at 7. Grateful for this church family.' },
+    { id: 'p2', owner: 'Travis', when: '6 hours ago', tag: 'Work', kind: 'Requests', audience: 'Pastors only', count: 1, text: 'Job interview in Baytown on Thursday. Praying for favor and steady nerves.' },
+    { id: 'p7', owner: 'Jeremy', when: '8 hours ago', tag: 'Waiting', kind: 'Requests', audience: 'Whole church', count: 2, text: 'Waiting on test results and trying not to borrow tomorrow\u2019s trouble.' },
+    { id: 'p3', owner: 'The Ortiz family', when: 'Yesterday', tag: 'Travel', kind: 'Requests', audience: 'Whole church', count: 2, text: 'Driving to Laredo to see family. Pray for safe roads both ways.' },
+    { id: 'p4', owner: 'Jenny & Cole', when: 'Yesterday', tag: 'Family', kind: 'Requests', audience: 'Pastors only', count: 4, text: 'First baby due in October. Pray for a healthy delivery and for our nerves.' },
+    { id: 'p5', owner: 'The Whitfields', when: '2 days ago', tag: 'Grief', kind: 'Requests', audience: 'Whole church', count: 6, text: 'We lost Mama Sunday night. Pray for the drive to the funeral and for peace in this house.' },
+    { id: 'p6', owner: 'Bill H.', when: '2 days ago', tag: 'Thanks', kind: 'Praise', audience: 'Whole church', count: 5, text: 'Rain on the north field after three dry weeks. He provides every time.' },
+    { id: 'own1', owner: 'Beverly', when: 'Last Wednesday', tag: 'Family', kind: 'Requests', audience: 'Pastors only', count: 2, text: 'Pray for my brother in Houston. He has not been to church in years and we are talking again.' }
+  ];
+
+  PEOPLE = [
+    { id: 'u1', name: 'Edward', role: 'Owner' },
+    { id: 'u2', name: 'Pastor Rachel', role: 'Lead pastor' },
+    { id: 'u3', name: 'Pastor Emily', role: 'Pastor' },
+    { id: 'u4', name: 'Pastor Heather', role: 'Pastor' },
+    { id: 'u5', name: 'Pastor Carlos', role: 'Pastor' },
+    { id: 'u6', name: 'Daniel', role: 'Agricultural minister' },
+    { id: 'u7', name: 'Beverly', role: 'Member' },
+    { id: 'u8', name: 'Travis', role: 'Member' },
+    { id: 'u9', name: 'Jeremy', role: 'Member' }
+  ];
+
+  MATRIX = [
+    { cap: 'Post a request', m: 1, p: 1, l: 1 },
+    { cap: 'See own requests only', m: 1, p: 0, l: 0 },
+    { cap: 'See every request', m: 0, p: 1, l: 1 },
+    { cap: 'Pray + notify the person', m: 0, p: 1, l: 1 },
+    { cap: 'Church-wide notices', m: 0, p: 0, l: 1 },
+    { cap: 'Change member roles', m: 0, p: 0, l: 1 },
+    { cap: 'Make someone a pastor', m: 0, p: 0, l: 1 },
+    { cap: 'Make someone lead pastor', m: 0, p: 0, l: 0 },
+    { cap: 'Billing & account deletion', m: 0, p: 0, l: 0 }
+  ];
+
+  ROLE_LADDER = ['Member', 'Prayer team', 'Agricultural minister', 'Pastor'];
+
+  state = {
+    role: 'member', tab: 'mine', wallFilter: 'All',
+    prayed: [], answered: [], newPosts: [], roleEdits: {},
+    notices: [
+      { id: 'n1', to: 'Beverly', title: 'Pastor Rachel prayed for you', body: 'For your surgery on Tuesday. She asked to be told how it goes.', when: '3 days ago', unread: false },
+      { id: 'n2', to: 'Beverly', title: 'Your request was received', body: 'Only the pastors can see it. Nobody else in the app will.', when: 'Last Wednesday', unread: false },
+      { id: 'n3', to: 'Pastor Emily', title: 'Two requests are still waiting', body: 'Nobody has prayed for the Whitfields or Travis yet today.', when: 'This morning', unread: true },
+      { id: 'n4', to: 'Pastor Rachel', title: 'Two requests are still waiting', body: 'Nobody has prayed for the Whitfields or Travis yet today.', when: 'This morning', unread: true },
+      { id: 'n6', to: 'Daniel', title: 'Two requests are still waiting', body: 'Nobody has prayed for the Whitfields or Travis yet today.', when: 'This morning', unread: true },
+      { id: 'n5', to: 'Edward', title: 'Two requests are still waiting', body: 'Nobody has prayed for the Whitfields or Travis yet today.', when: 'This morning', unread: true }
+    ],
+    draft: '', audience: 'Whole church', pickTag: 'Sickness', composeOpen: false,
+    session: null, sessionSec: 0, toast: '', remind: true,
+    auth: 'signin', signinId: '', signinPass: '', pinEntry: '', pinMsg: '', pinBad: false,
+    pwSet: {}, phone: '', codeEntry: '', codeMsg: '', codeBad: false, signinErr: '',
+    adminModal: null, broadcastText: '', transferPick: '', deleteText: '', cardSwap: false
+  };
+
+  PINS = { pastor: '2026', ag: '2026', lead: '2210', owner: '00599' };
+
+  pinFor() { return this.PINS[this.state.role] || ''; }
+
+  // The account directory — the phone number is the key, the role comes back with it.
+  DIRECTORY = [
+    { phone: '2815550199', name: 'Edward', role: 'owner' },
+    { phone: '2815550142', name: 'Pastor Rachel', role: 'lead' },
+    { phone: '2815550178', name: 'Pastor Emily', role: 'pastor' },
+    { phone: '2815550151', name: 'Daniel', role: 'ag' },
+    { phone: '2815550134', name: 'Beverly', role: 'member' },
+    { phone: '2815550167', name: 'Travis', role: 'member' },
+    { phone: '2815550183', name: 'Jeremy', role: 'member' }
+  ];
+
+  digits(s) { return String(s || '').replace(/\D/g, ''); }
+
+  lookup(phone) {
+    const d = this.digits(phone).slice(-10);
+    if (d.length < 10) return null;
+    return this.DIRECTORY.find(r => r.phone === d) || null;
+  }
+
+  scrollRef = React.createRef();
+  peopleRef = React.createRef();
+
+  scrollToPeople() {
+    const el = this.scrollRef.current, t = this.peopleRef.current;
+    if (el && t) el.scrollTop = Math.max(0, t.offsetTop - 90);
+    this.say('Use Change next to a name to add or remove a lead pastor.');
+  }
+
+  doSignOut() {
+    this.setState({ auth: 'signin', signinPass: '', phone: '', signinId: '', signinErr: '', pinEntry: '', pinMsg: '', codeEntry: '', codeMsg: '', session: null, tab: 'wall', toast: '', adminModal: null });
+    this.resetScroll();
+  }
+
+  flag(name) {
+    const v = this.props[name];
+    if (v === undefined || v === null || v === '') return false;
+    if (v === 'false' || v === '0') return false;
+    return !!v;
+  }
+  me() { return this.ROLES[this.state.role]; }
+  resetScroll() { const el = this.scrollRef.current; if (el) el.scrollTop = 0; }
+  goTab(tab) { this.setState({ tab }); this.resetScroll(); }
+  say(msg) {
+    clearTimeout(this.toastTimer);
+    this.setState({ toast: msg });
+    this.toastTimer = setTimeout(() => this.setState({ toast: '' }), 3200);
+  }
+  switchRole(role) {
+    this.setState({
+      role, tab: 'wall', session: null, composeOpen: false, toast: '',
+      auth: 'signin', signinId: '', signinPass: '', pinEntry: '', pinMsg: '', pinBad: false,
+      codeEntry: '', codeMsg: '', codeBad: false
+    });
+    this.resetScroll();
+  }
+
+  // Resolve who is signing in from the phone number, then gate on that role.
+  authenticate() {
+    const found = this.lookup(this.state.phone);
+    if (!found) {
+      this.setState({ signinErr: 'We don\u2019t have that number on file. Ask the church office to add you, or check the digits.' });
+      return;
+    }
+    const role = found.role;
+    const needsPin = this.ROLES[role].leader;
+    this.setState({
+      role, signinErr: '', signinId: '', signinPass: '', codeEntry: '', codeMsg: '',
+      auth: needsPin ? 'pin' : 'app', tab: 'wall', pinEntry: '', pinMsg: '', pinBad: false
+    });
+    this.resetScroll();
+  }
+
+  afterCredential() { this.authenticate(); }
+
+  codePress(k) {
+    const st = this.state;
+    if (k === 'clear') { this.setState({ codeEntry: '', codeMsg: '', codeBad: false }); return; }
+    if (k === 'del') { this.setState({ codeEntry: st.codeEntry.slice(0, -1), codeMsg: '', codeBad: false }); return; }
+    if (st.codeEntry.length >= 6) return;
+    const next = st.codeEntry + k;
+    this.setState({ codeEntry: next, codeMsg: '', codeBad: false });
+    if (next.length === 6) {
+      this.setState({ codeMsg: 'Code accepted' });
+      setTimeout(() => { this.setState({ codeEntry: '', codeMsg: '' }); this.afterCredential(); }, 460);
+    }
+  }
+
+  pinPress(k) {
+    const st = this.state;
+    const pin = this.pinFor();
+    if (k === 'clear') { this.setState({ pinEntry: '', pinMsg: '', pinBad: false }); return; }
+    if (k === 'del') { this.setState({ pinEntry: st.pinEntry.slice(0, -1), pinMsg: '', pinBad: false }); return; }
+    if (st.pinEntry.length >= pin.length) return;
+    const next = st.pinEntry + k;
+    if (next.length < pin.length) { this.setState({ pinEntry: next, pinMsg: '', pinBad: false }); return; }
+    if (next === pin) {
+      this.setState({ pinEntry: next, pinMsg: 'Unlocked', pinBad: false });
+      setTimeout(() => this.setState({ auth: 'app', pinEntry: '', pinMsg: '' }), 420);
+    } else {
+      this.setState({ pinEntry: next, pinMsg: 'That PIN is not right. Try again.', pinBad: true });
+      setTimeout(() => this.setState({ pinEntry: '' }), 500);
+    }
+  }
+  chip = (label, active, onClick) => ({
+    label, onClick,
+    bg: active ? '#8c6242' : 'transparent',
+    fg: active ? '#f8f4ec' : '#26221d',
+    bc: active ? '#8c6242' : 'rgba(38,34,29,.18)'
+  });
+  soft = (label, active, onClick) => ({
+    label, onClick,
+    bg: active ? '#8c6242' : '#fdfaf4',
+    fg: active ? '#f8f4ec' : '#6e675c',
+    bc: active ? '#8c6242' : 'rgba(38,34,29,.12)'
+  });
+  dotFor = id => this.DOTS[Math.abs(String(id).split('').reduce((a, c) => a + c.charCodeAt(0), 0)) % this.DOTS.length];
+  initialOf = n => String(n).replace(/^The /, '').trim().charAt(0).toUpperCase();
+  roleOf(p) { return this.state.roleEdits[p.id] || p.role; }
+
+  componentDidMount() {
+    this.timer = setInterval(() => {
+      if (this.state.session && this.state.session.active) this.setState(s => ({ sessionSec: s.sessionSec + 1 }));
+    }, 1000);
+  }
+  componentWillUnmount() { clearInterval(this.timer); clearTimeout(this.toastTimer); }
+
+  prayFor(post) {
+    const me = this.me();
+    const already = this.state.prayed.indexOf(post.id) > -1;
+    if (already) {
+      this.setState(s => ({ prayed: s.prayed.filter(i => i !== post.id) }));
+      return;
+    }
+    this.setState(s => ({
+      prayed: s.prayed.concat([post.id]),
+      notices: [{
+        id: 'nx' + Date.now(), to: post.owner,
+        title: me.name + ' prayed for you',
+        body: 'On your request: "' + post.text.slice(0, 60) + (post.text.length > 60 ? '…' : '') + '"',
+        when: 'Just now', unread: true
+      }].concat(s.notices)
+    }));
+    this.say(post.owner + ' gets a note: "' + me.name + ' prayed for you."');
+  }
+
+  cycleRole(p) {
+    const me = this.me();
+    const cur = this.roleOf(p);
+    if (cur === 'Owner') { this.say('Only Edward can hand off ownership.'); return; }
+    if (cur === 'Lead pastor' && !me.owner) { this.say('Only the owner can change a lead pastor.'); return; }
+    const i = this.ROLE_LADDER.indexOf(cur);
+    let next = this.ROLE_LADDER[(i + 1) % this.ROLE_LADDER.length];
+    if (me.owner && cur === 'Pastor') next = 'Lead pastor';
+    this.setState(s => ({ roleEdits: { ...s.roleEdits, [p.id]: next } }));
+    this.say(p.name + ' is now ' + (next === 'Member' ? 'a member' : 'an ' + next.toLowerCase()).replace('an p', 'a p').replace('an l', 'a l') + '.');
+  }
+
+  renderVals() {
+    const st = this.state;
+    const me = this.me();
+    const posts = st.newPosts.concat(this.FEED);
+    const open = posts.filter(p => st.answered.indexOf(p.id) < 0);
+    const requests = open.filter(p => p.kind === 'Requests');
+    const waiting = requests.filter(p => st.prayed.indexOf(p.id) < 0);
+    const mineOwn = open.filter(p => p.owner === me.name);
+    const visible = open.filter(p => me.leader || p.audience === 'Whole church' || p.owner === me.name);
+    const visWaiting = visible.filter(p => p.kind === 'Requests' && st.prayed.indexOf(p.id) < 0);
+    const myNotices = st.notices.filter(n => n.to === me.name);
+    const unread = myNotices.filter(n => n.unread).length;
+    const sess = st.session;
+    const sesList = sess ? sess.list : [];
+    const cur = sess && sess.active ? sesList[sess.i] : null;
+    const tint = on => (on ? 'rgba(140,98,66,.15)' : 'transparent');
+    const ink = on => (on ? '#8c6242' : '#6e675c');
+    const tabCount = 3 + (me.leader ? 1 : 0) + (me.admin ? 1 : 0);
+    const titles = { wall: 'Prayer wall', pray: 'Pray', mine: 'Your requests', notices: 'Notices', admin: 'Admin' };
+    const mark = v => (v ? '✓' : '–');
+    const markInk = v => (v ? '#6b7a52' : 'rgba(38,34,29,.28)');
+
+    return {
+      isSignin: st.auth === 'signin',
+      isPinStep: st.auth === 'pin',
+      isCodeStep: st.auth === 'code',
+      signinId: st.signinId, signinPass: st.signinPass,
+      namePlaceholder: me.name,
+      onSigninId: e => this.setState({ signinId: e.target.value }),
+      onSigninPass: e => this.setState({ signinPass: e.target.value }),
+      signinTitle: st.pwSet[st.role] ? 'Welcome back' : 'Sign in',
+      signinBlurb: 'Your phone number is how the app knows you. Whatever the church office set you up as — member, pastor, lead pastor, owner — comes back with it.',
+      passLabel: st.pwSet[st.role] ? 'Password' : 'Create a password',
+      passHint: st.pwSet[st.role] ? 'The one you set up.' : 'You set this once and keep it.',
+      signinCta: st.pwSet[st.role] ? 'Sign in' : 'Save it and sign in',
+      signinHint: 'Pastors, the lead pastor, and the owner enter a PIN after this step.',
+      doSignIn: () => {
+        const found = this.lookup(st.phone);
+        if (found) this.setState(s => ({ pwSet: { ...s.pwSet, [found.role]: true } }));
+        this.authenticate();
+      },
+      phone: st.phone,
+      signinErr: st.signinErr,
+      hasSigninErr: !!st.signinErr,
+      onPhone: e => this.setState({ phone: e.target.value, signinErr: '' }),
+      directory: this.DIRECTORY.map(r => ({
+        name: r.name,
+        role: this.ROLES[r.role].label,
+        phone: '(281) 555-' + r.phone.slice(-4),
+        onUse: () => this.setState({ phone: '(281) 555-' + r.phone.slice(-4), signinId: r.name, signinErr: '' })
+      })),
+      phoneMasked: (st.phone || '(281) 555-0134').replace(/\d(?=\d{4})/g, '•'),
+      textCode: () => {
+        if (!this.lookup(st.phone)) {
+          this.setState({ signinErr: 'Enter a number we have on file and we can text it a code.' });
+          return;
+        }
+        this.setState({ auth: 'code', codeEntry: '', codeMsg: '', codeBad: false, signinErr: '' });
+      },
+      codeBoxes: [0, 1, 2, 3, 4, 5].map(i => ({
+        ch: st.codeEntry[i] || '',
+        bc: st.codeEntry.length === i ? '#8c6242' : 'rgba(38,34,29,.16)'
+      })),
+      codeMsg: st.codeMsg || 'Any six digits work in this demo.',
+      codeMsgInk: st.codeMsg ? '#6b7a52' : '#6e675c',
+      codeKeys: ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'clear', '0', 'del'].map(k => ({
+        label: k === 'clear' ? 'Clear' : k === 'del' ? '⌫' : k,
+        bg: k === 'clear' || k === 'del' ? 'transparent' : '#fdfaf4',
+        onClick: () => this.codePress(k)
+      })),
+      signOut: () => this.doSignOut(),
+      backToSignin: () => this.setState({ auth: 'signin', pinEntry: '', pinMsg: '', pinBad: false, codeEntry: '', codeMsg: '' }),
+      pinKicker: me.owner ? 'Owner access' : me.admin ? 'Lead pastor access' : 'Pastoral access',
+      pinWho: me.owner ? 'The owner account' : me.admin ? 'A lead pastor' : 'A pastor',
+      pinDots: this.pinFor().split('').map((_, i) => ({
+        bg: st.pinEntry.length > i ? (st.pinBad ? '#c2724f' : '#dcb98f') : 'transparent',
+        bc: st.pinBad ? '#c2724f' : 'rgba(220,185,143,.6)'
+      })),
+      pinMsg: st.pinMsg || (this.pinFor().length + '-digit PIN'),
+      pinMsgInk: st.pinBad ? '#e8a889' : 'rgba(248,244,236,.6)',
+      pinKeys: ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'clear', '0', 'del'].map(k => ({
+        label: k === 'clear' ? 'Clear' : k === 'del' ? '⌫' : k,
+        bg: k === 'clear' || k === 'del' ? 'transparent' : 'rgba(248,244,236,.1)',
+        onClick: () => this.pinPress(k)
+      })),
+      showPrompt: this.flag('showPrompt'),
+      showTimer: this.flag('showTimer'),
+      roleSwitch: Object.keys(this.ROLES).map(k => this.chip(this.ROLES[k].label, st.role === k, () => this.switchRole(k))),
+
+      screenTitle: titles[st.tab] || 'Prayer Wall',
+      whoLine: me.name + ' · ' + me.title,
+      meName: me.name, meRole: me.title, meInitial: this.initialOf(me.name), meDot: this.dotFor(me.name),
+      isLeader: me.leader, canAdmin: me.admin,
+      tabCols: 'repeat(' + tabCount + ',1fr)',
+
+      isWall: st.tab === 'wall',
+      isOwner: me.owner,
+      isPray: st.tab === 'pray' && me.leader,
+      isMine: st.tab === 'mine',
+      isNotices: st.tab === 'notices',
+      isAdmin: st.tab === 'admin' && me.admin,
+      memberIntro: !me.leader,
+      goWall: () => this.goTab('wall'), goPray: () => this.goTab('pray'),
+      goMine: () => this.goTab('mine'), goAdmin: () => this.goTab('admin'),
+      goNotices: () => this.goTab('notices'),
+      bWall: tint(st.tab === 'wall'), tWall: ink(st.tab === 'wall'),
+      bPray: tint(st.tab === 'pray'), tPray: ink(st.tab === 'pray'),
+      bMine: tint(st.tab === 'mine'), tMine: ink(st.tab === 'mine'),
+      bNotices: tint(st.tab === 'notices'), tNotices: ink(st.tab === 'notices'),
+      bAdmin: tint(st.tab === 'admin'), tAdmin: ink(st.tab === 'admin'),
+
+      hasUnread: unread > 0, unreadCount: unread,
+      notices: myNotices.map(n => ({
+        title: n.title, body: n.body, when: n.when, unread: !!n.unread,
+        cardBg: n.unread ? '#fdfaf4' : 'rgba(253,250,244,.6)',
+        dot: n.unread ? '#8c6242' : '#6e675c'
+      })),
+      noticesEmpty: myNotices.length === 0,
+      markAllRead: () => this.setState(s => ({ notices: s.notices.map(n => (n.to === me.name ? { ...n, unread: false } : n)) })),
+
+      wallKicker: me.leader ? 'Every request, including pastors-only' : 'Shared with the church',
+      wallSub: me.leader
+        ? 'Members see only what was shared church-wide. When you pray, the person is told.'
+        : 'These were shared with everyone. Requests sent to the pastors only never appear here.',
+      waitingLine: me.leader
+        ? (waiting.length === 0 ? 'Every request has been prayed over' : waiting.length + (waiting.length === 1 ? ' request is waiting' : ' requests are waiting'))
+        : (visWaiting.length === 0 ? 'The wall is covered today' : visWaiting.length + (visWaiting.length === 1 ? ' neighbor needs prayer' : ' neighbors need prayer')),
+      waitingCount: waiting.length,
+      waitingNames: waiting.length ? waiting.map(p => p.owner).join(' · ') : 'The list is covered. Come back tomorrow.',
+      wallFilters: ['All', 'Waiting', 'Praise'].map(f => this.chip(f, st.wallFilter === f, () => this.setState({ wallFilter: f }))),
+      feed: visible.filter(p => {
+        if (st.wallFilter === 'Praise') return p.kind === 'Praise';
+        if (st.wallFilter === 'Waiting') return p.kind === 'Requests' && st.prayed.indexOf(p.id) < 0;
+        return true;
+      }).map(p => {
+        const on = st.prayed.indexOf(p.id) > -1;
+        return {
+          name: p.owner, when: p.when, text: p.text, tag: p.tag,
+          audience: p.audience === 'Whole church' ? 'Whole church' : 'Pastors only',
+          initial: this.initialOf(p.owner), dot: this.dotFor(p.id),
+          tagBg: p.kind === 'Praise' ? 'rgba(107,122,82,.16)' : 'rgba(140,98,66,.12)',
+          tagFg: p.kind === 'Praise' ? '#4c5a37' : '#6b4526',
+          label: on ? 'Prayed — they were told' : 'I prayed',
+          countLine: (p.count + (on ? 1 : 0)) + ' have prayed',
+          bg: on ? '#8c6242' : 'transparent', fg: on ? '#f8f4ec' : '#8c6242',
+          bc: on ? '#8c6242' : 'rgba(140,98,66,.4)',
+          onPray: () => this.prayFor(p)
+        };
+      }),
+
+      prayIdle: !sess, prayActive: !!(sess && sess.active), prayDone: !!(sess && !sess.active),
+      startSession: () => {
+        this.setState({ tab: 'pray', sessionSec: 0, session: { active: true, i: 0, done: 0, list: (waiting.length ? waiting : requests) } });
+        this.resetScroll();
+      },
+      sessionStep: sess ? (Math.min(sess.i + 1, sesList.length) + ' of ' + sesList.length) : '',
+      sessionPct: sesList.length ? Math.round((sess.i / sesList.length) * 100) + '%' : '0%',
+      sessionClock: Math.floor(st.sessionSec / 60) + ':' + String(st.sessionSec % 60).padStart(2, '0'),
+      curName: cur ? cur.owner : '', curText: cur ? cur.text : '',
+      curInitial: cur ? this.initialOf(cur.owner) : '', curDot: cur ? this.dotFor(cur.id) : '#8c6242',
+      curPrompt: cur ? (this.PROMPTS[cur.tag] || this.PROMPTS.Waiting) : '',
+      nextLabel: sess && sess.i >= sesList.length - 1 ? 'Prayed — finish' : 'Prayed — next',
+      nextInSession: () => {
+        const l = st.session.list, i = st.session.i, p = l[i];
+        if (st.prayed.indexOf(p.id) < 0) this.prayFor(p);
+        this.setState(s => ({
+          session: i >= l.length - 1
+            ? { active: false, i, done: s.session.done + 1, list: l }
+            : { active: true, i: i + 1, done: s.session.done + 1, list: l }
+        }));
+        this.resetScroll();
+      },
+      skipInSession: () => {
+        this.setState(s => {
+          const l = s.session.list, i = s.session.i;
+          return { session: i >= l.length - 1 ? { active: false, i, done: s.session.done, list: l } : { active: true, i: i + 1, done: s.session.done, list: l } };
+        });
+        this.resetScroll();
+      },
+      endSession: () => this.setState(s => ({ session: { active: false, i: s.session.i, done: s.session.done, list: s.session.list } })),
+      doneLine: sess ? (sess.done === 0 ? 'Come back when you can' : 'You prayed for ' + sess.done + (sess.done === 1 ? ' person' : ' people')) : '',
+      doneSub: sess && sess.done > 0 ? 'Each of them just got a note that you did.' : 'Nothing was sent. The list will keep.',
+
+      myRequests: mineOwn.map(r => {
+        const done = st.answered.indexOf(r.id) > -1;
+        const prayedFor = st.prayed.indexOf(r.id) > -1;
+        return {
+          when: r.when, text: r.text,
+          prayedLine: (r.count + (prayedFor ? 1 : 0)) + ' prayed',
+          seenBy: r.audience === 'Pastors only' ? 'Visible to the pastors only' : 'Shared with the whole church',
+          stateLabel: done ? 'Answered' : (r.audience === 'Pastors only' ? 'With the pastors' : 'On the wall'),
+          stateBg: done ? 'rgba(107,122,82,.16)' : 'rgba(140,98,66,.12)',
+          stateFg: done ? '#4c5a37' : '#6b4526',
+          answerLabel: done ? 'Answered — thank God' : 'Mark as answered',
+          bg: done ? '#6b7a52' : 'transparent', fg: done ? '#f8f4ec' : '#8c6242',
+          bc: done ? '#6b7a52' : 'rgba(140,98,66,.4)',
+          onAnswered: () => this.setState(s => ({ answered: done ? s.answered.filter(i => i !== r.id) : s.answered.concat([r.id]) }))
+        };
+      }),
+      myEmpty: mineOwn.length === 0,
+      remindLabel: st.remind ? 'Notices on' : 'Notices off',
+      remindBg: st.remind ? '#8c6242' : 'transparent',
+      remindFg: st.remind ? '#f8f4ec' : '#6e675c',
+      remindBc: st.remind ? '#8c6242' : 'rgba(38,34,29,.18)',
+      toggleRemind: () => this.setState(s => ({ remind: !s.remind })),
+
+      adminKicker: me.owner ? 'Owner' : 'Lead pastor',
+      adminTitle: me.owner ? 'Full control of the church account' : 'Everything but the owner keys',
+      adminSub: me.owner
+        ? 'You can set every role including lead pastor, and you alone handle billing and deleting the account. The owner section below is visible to you and nobody else.'
+        : 'You can see every request, run the prayer team, and set roles up to pastor.',
+      people: this.PEOPLE.filter(p => p.name !== 'Edward' || me.owner).map(p => {
+        const role = this.roleOf(p);
+        const locked = role === 'Owner' || (role === 'Lead pastor' && !me.owner);
+        return {
+          name: p.name, role, initial: this.initialOf(p.name), dot: this.dotFor(p.id),
+          btnLabel: locked ? 'Locked' : 'Change',
+          btnBg: locked ? 'transparent' : '#fdfaf4',
+          btnFg: locked ? '#6e675c' : '#8c6242',
+          btnBc: locked ? 'rgba(38,34,29,.12)' : 'rgba(140,98,66,.4)',
+          onChange: () => this.cycleRole(p)
+        };
+      }),
+      matrix: this.MATRIX.map(r => ({
+        cap: r.cap, m: mark(r.m), p: mark(r.p), l: mark(r.l),
+        mInk: markInk(r.m), pInk: markInk(r.p), lInk: markInk(r.l)
+      })),
+      broadcast: () => this.say('Notice composer — goes to everyone who has notices on.'),
+      exportData: () => this.say('Prayer log exported to a spreadsheet.'),
+      ownerActions: [
+        ['Add or remove a lead pastor', 'Roles'],
+        ['Transfer ownership', 'Careful'],
+        ['Billing & subscription', 'Account'],
+        ['Delete the church account', 'Permanent']
+      ].map(([label, hint]) => ({
+        label, hint,
+        onClick: () => this.say(label + ' — owner action confirmed.')
+      })),
+
+      toastOn: !!st.toast, toast: st.toast,
+      composeOpen: st.composeOpen, draft: st.draft,
+      openCompose: () => this.setState({ composeOpen: true }),
+      closeCompose: () => this.setState({ composeOpen: false }),
+      onDraft: e => this.setState({ draft: e.target.value }),
+      audienceOpts: ['Whole church', 'Pastors only'].map(a => this.chip(a, st.audience === a, () => this.setState({ audience: a }))),
+      sendLabel: st.audience === 'Pastors only' ? 'Send to the pastors' : 'Post to the wall',
+      tagPicks: this.TAGS.map(t => this.soft(t, st.pickTag === t, () => this.setState({ pickTag: t }))),
+      postBlocked: !st.draft.trim(),
+      postPrayer: () => {
+        const t = st.draft.trim();
+        if (!t) return;
+        this.setState(s => ({
+          composeOpen: false, draft: '', tab: 'mine',
+          newPosts: [{
+            id: 'own' + Date.now(), owner: me.name, when: 'Just now',
+            tag: s.pickTag, kind: 'Requests', audience: s.audience, count: 0, text: t
+          }].concat(s.newPosts)
+        }));
+        this.resetScroll();
+        this.say(st.audience === 'Pastors only' ? 'Sent. Only the pastors can see it.' : 'Posted. The whole church can see it.');
+      },
+      scrollRef: this.scrollRef
+    };
+  }
+}
+</script>
+</body>
+</html>

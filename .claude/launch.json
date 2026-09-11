@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "prayerwall-web",
+      "runtimeExecutable": "/Users/micahmedlin/Downloads/design_handoff_prayer_wall/app/run-web.sh",
+      "runtimeArgs": [],
+      "port": 8081
+    }
+  ]
+}
