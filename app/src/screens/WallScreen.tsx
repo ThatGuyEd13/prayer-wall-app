@@ -65,7 +65,7 @@ export function WallScreen() {
       </Pressable>
 
       <View style={{ flexDirection: 'row', gap: 8 }}>
-        {(['All', 'Waiting', 'Praise'] as const).map((f) => {
+        {(['All', 'Praise'] as const).map((f) => {
           const active = ui.wallFilter === f;
           return (
             <Pressable
