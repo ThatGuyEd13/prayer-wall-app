@@ -13,9 +13,9 @@ export function PostMenu({ request, style }: { request: Request; style?: StylePr
   const me = currentUser!;
   const [open, setOpen] = useState(false);
 
-  const isOwner = request.ownerId === me.id;
-  const canDelete = isOwner || me.role === 'lead_pastor' || me.role === 'owner';
-  const canResolve = isOwner && !request.answeredAt;
+  const canManage = me.role === 'lead_pastor' || me.role === 'owner';
+  const canDelete = canManage;
+  const canResolve = canManage && !request.answeredAt;
   if (!canDelete) return null;
 
   const isPraise = request.kind === 'praise';

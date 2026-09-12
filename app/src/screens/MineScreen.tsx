@@ -17,6 +17,7 @@ export function MineScreen() {
     typeof navigator !== 'undefined' && 'serviceWorker' in navigator && typeof window !== 'undefined' && 'PushManager' in window;
   const notifOn = notifSupported && typeof Notification !== 'undefined' && Notification.permission === 'granted';
   const mineOwn = useMemo(() => db.requests.filter((r) => r.ownerId === me.id && !r.answeredAt), [db.requests, me.id]);
+  const canManage = me.role === 'lead_pastor' || me.role === 'owner';
 
   return (
     <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 160, gap: 14 }} style={{ flex: 1, backgroundColor: colors.ground }}>
@@ -74,14 +75,16 @@ export function MineScreen() {
                 {r.audience === 'pastors' ? 'Visible to the pastors only' : 'Shared with the whole church'}
               </Text>
             </Pressable>
-            <Pill
-              label={done ? 'Answered — thank God' : 'Mark as answered'}
-              onPress={() => toggleAnswered(r.id)}
-              bg={done ? colors.praiseSolid : 'transparent'}
-              fg={done ? '#f8f4ec' : colors.clay}
-              bc={done ? colors.praiseSolid : 'rgba(140,98,66,.4)'}
-              style={{ alignSelf: 'flex-start', minHeight: 44, paddingHorizontal: 16 }}
-            />
+            {canManage && (
+              <Pill
+                label={done ? 'Answered — thank God' : 'Mark as answered'}
+                onPress={() => toggleAnswered(r.id)}
+                bg={done ? colors.praiseSolid : 'transparent'}
+                fg={done ? '#f8f4ec' : colors.clay}
+                bc={done ? colors.praiseSolid : 'rgba(140,98,66,.4)'}
+                style={{ alignSelf: 'flex-start', minHeight: 44, paddingHorizontal: 16 }}
+              />
+            )}
           </Card>
         );
       })}
