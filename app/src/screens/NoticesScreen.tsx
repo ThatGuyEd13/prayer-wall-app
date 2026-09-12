@@ -1,7 +1,9 @@
 import React, { useMemo } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
+import { Text } from '../components/AppText';
 import { colors, radius, shadow } from '../theme';
 import { Pill } from '../components/Pill';
+import { CheckIcon } from '../components/Icons';
 import { useApp } from '../store';
 
 export function NoticesScreen() {
@@ -46,7 +48,7 @@ export function NoticesScreen() {
               justifyContent: 'center',
             }}
           >
-            <Text style={{ color: '#fdfaf4' }}>✓</Text>
+            <CheckIcon size={19} color="#fdfaf4" strokeWidth={1.9} />
           </View>
           <View style={{ flex: 1, gap: 5 }}>
             <Text style={{ fontWeight: '600', fontSize: 18, letterSpacing: -0.2, color: colors.ink }}>{n.title}</Text>

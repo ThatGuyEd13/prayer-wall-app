@@ -1,20 +1,37 @@
-export type Role = 'member' | 'prayer_team' | 'agricultural_minister' | 'pastor' | 'lead_pastor' | 'owner';
+export type Role = 'member' | 'prayer_team' | 'agricultural_minister' | 'worship_minister' | 'pastor' | 'lead_pastor' | 'owner';
 
-export const ROLE_LADDER: Role[] = ['member', 'prayer_team', 'agricultural_minister', 'pastor', 'lead_pastor'];
+export const ROLE_LADDER: Role[] = ['member', 'prayer_team', 'agricultural_minister', 'worship_minister', 'pastor', 'lead_pastor'];
 
 export const ROLE_LABEL: Record<Role, string> = {
   member: 'Member',
   prayer_team: 'Prayer team',
   agricultural_minister: 'Agricultural minister',
+  worship_minister: 'Worship minister',
   pastor: 'Pastor',
   lead_pastor: 'Lead pastor',
   owner: 'Owner',
 };
 
 export function isLeaderRole(role: Role): boolean {
-  return role === 'pastor' || role === 'agricultural_minister' || role === 'lead_pastor' || role === 'owner';
+  return (
+    role === 'pastor' ||
+    role === 'agricultural_minister' ||
+    role === 'worship_minister' ||
+    role === 'lead_pastor' ||
+    role === 'owner'
+  );
 }
+// "Sees the Admin tab" — lead pastor and owner have full admin access; the
+// specialty ministers (agricultural, worship) get the same admin tab
+// (broadcasts, export, People list) except changing anyone's role (see
+// canManageRoles below).
 export function isAdminRole(role: Role): boolean {
+  return role === 'lead_pastor' || role === 'owner' || role === 'agricultural_minister' || role === 'worship_minister';
+}
+// "Can change a member's role / promote someone to pastor" — lead pastor
+// and owner only. The agricultural minister does not get this, even though
+// it otherwise has full admin access.
+export function canManageRoles(role: Role): boolean {
   return role === 'lead_pastor' || role === 'owner';
 }
 export function needsPin(role: Role): boolean {
@@ -24,9 +41,6 @@ export function needsPin(role: Role): boolean {
 export interface User {
   id: string;
   name: string;
-  phone: string; // normalized digits, last-10
-  passwordHash: string;
-  pinHash: string | null;
   role: Role;
   createdAt: number;
 }
@@ -51,6 +65,15 @@ export interface Request {
   createdAt: number;
   answeredAt: number | null;
   prayedBy: PrayerLogEntry[];
+}
+
+export interface Comment {
+  id: string;
+  requestId: string;
+  authorId: string;
+  authorName: string;
+  text: string;
+  createdAt: number;
 }
 
 export interface Notification {

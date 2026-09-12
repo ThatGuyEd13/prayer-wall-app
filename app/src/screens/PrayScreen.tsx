@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
+import { Text } from '../components/AppText';
 import { colors, dotFor, initialOf, radius } from '../theme';
 import { Card, DarkCard } from '../components/Card';
 import { Pill } from '../components/Pill';
@@ -21,7 +22,7 @@ export function PrayScreen() {
           A guided walk through the requests, one person at a time. Everyone you pray for gets a note that you did.
         </Text>
         <Card>
-          <Text style={{ fontSize: 11, fontWeight: '600', letterSpacing: 2, textTransform: 'uppercase', color: colors.clay }}>Waiting on prayer</Text>
+          <Text style={{ fontSize: 11, fontWeight: '500', letterSpacing: 2, textTransform: 'uppercase', color: colors.clay }}>Waiting on prayer</Text>
           <Text style={{ fontSize: 52, fontWeight: '600', letterSpacing: -1, color: colors.ink }}>{waiting.length}</Text>
           <Text style={{ fontSize: 17, lineHeight: 22, color: colors.inkSoft }}>
             {waiting.length ? waiting.map((p) => p.ownerName).join(' · ') : 'The list is covered. Come back tomorrow.'}
@@ -29,7 +30,7 @@ export function PrayScreen() {
           <Pill label="Begin" onPress={startPraySession} style={{ marginTop: 8 }} />
         </Card>
         <View style={{ borderRadius: radius.card, borderWidth: 1, borderColor: 'rgba(140,98,66,.3)', padding: 20, gap: 8 }}>
-          <Text style={{ fontSize: 11, fontWeight: '600', letterSpacing: 2, textTransform: 'uppercase', color: colors.clay }}>No pressure</Text>
+          <Text style={{ fontSize: 11, fontWeight: '500', letterSpacing: 2, textTransform: 'uppercase', color: colors.clay }}>No pressure</Text>
           <Text style={{ fontSize: 17, lineHeight: 26, color: colors.ink }}>
             You don't have to finish the list, and you don't have to say it well. Read a name, hold it a moment, move on.
           </Text>
@@ -60,7 +61,7 @@ export function PrayScreen() {
         </View>
         {cur && (
           <View style={{ borderRadius: radius.card, backgroundColor: colors.clayTint, padding: 20, gap: 8 }}>
-            <Text style={{ fontSize: 11, fontWeight: '600', letterSpacing: 2, textTransform: 'uppercase', color: colors.clay }}>Something to pray</Text>
+            <Text style={{ fontSize: 11, fontWeight: '500', letterSpacing: 2, textTransform: 'uppercase', color: colors.clay }}>Something to pray</Text>
             <Text style={{ fontSize: 18, lineHeight: 24, color: colors.ink }}>{PROMPTS[cur.tag] || PROMPTS.Waiting}</Text>
           </View>
         )}
@@ -76,7 +77,7 @@ export function PrayScreen() {
   return (
     <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 160, gap: 14 }} style={{ flex: 1, backgroundColor: colors.ground }}>
       <DarkCard style={{ alignItems: 'center' }}>
-        <Text style={{ fontSize: 11, fontWeight: '600', letterSpacing: 2, textTransform: 'uppercase', color: colors.clayLight }}>Amen</Text>
+        <Text style={{ fontSize: 11, fontWeight: '500', letterSpacing: 2, textTransform: 'uppercase', color: colors.clayLight }}>Amen</Text>
         <Text style={{ fontSize: 30, fontWeight: '600', letterSpacing: -0.4, color: '#f8f4ec' }}>
           {sess.done === 0 ? 'Come back when you can' : `You prayed for ${sess.done} ${sess.done === 1 ? 'person' : 'people'}`}
         </Text>

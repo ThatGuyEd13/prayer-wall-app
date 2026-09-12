@@ -1,5 +1,6 @@
 import React from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
+import { Text } from '../components/AppText';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../theme';
 import { Keypad } from '../components/Keypad';
@@ -13,7 +14,7 @@ export function CodeScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.ground, paddingTop: insets.top + 40, paddingHorizontal: 24, paddingBottom: insets.bottom + 24 }}>
-      <Text style={{ fontSize: 11, fontWeight: '600', letterSpacing: 2, textTransform: 'uppercase', color: colors.clay }}>
+      <Text style={{ fontSize: 11, fontWeight: '500', letterSpacing: 2, textTransform: 'uppercase', color: colors.clay }}>
         One-time sign in
       </Text>
       <Text style={{ fontSize: 28, fontWeight: '600', letterSpacing: -0.3, marginTop: 14, color: colors.ink }}>Check your phone</Text>
@@ -41,7 +42,7 @@ export function CodeScreen() {
         ))}
       </View>
       <Text style={{ minHeight: 24, textAlign: 'center', fontSize: 15, color: ui.codeBad ? colors.danger : colors.inkSoft }}>
-        {ui.codeMessage || 'Enter the code from the demo banner.'}
+        {ui.codeMessage || 'Enter the 6-digit code we texted you.'}
       </Text>
 
       <Keypad onPress={codePress} />

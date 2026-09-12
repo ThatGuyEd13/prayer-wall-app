@@ -1,5 +1,6 @@
 import React from 'react';
-import { ActivityIndicator, Pressable, StyleProp, Text, ViewStyle } from 'react-native';
+import { ActivityIndicator, Pressable, StyleProp, ViewStyle } from 'react-native';
+import { Text } from './AppText';
 import { colors, radius } from '../theme';
 
 type Variant = 'solid' | 'outline' | 'ghost' | 'chip';

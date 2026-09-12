@@ -1,5 +1,6 @@
 import React from 'react';
-import { Image, ScrollView, Text, TextInput, View } from 'react-native';
+import { Image, ScrollView, TextInput, View } from 'react-native';
+import { Text } from '../components/AppText';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, radius } from '../theme';
 import { Pill } from '../components/Pill';
@@ -17,7 +18,7 @@ export function SignInScreen() {
     >
       <View style={{ alignItems: 'center', gap: 6 }}>
         <Image source={require('../../assets/brand/logo.png')} style={{ height: 88, width: 160, resizeMode: 'contain' }} />
-        <Text style={{ fontSize: 11, fontWeight: '600', letterSpacing: 3, textTransform: 'uppercase', color: colors.clay, marginTop: 2 }}>
+        <Text style={{ fontSize: 11, fontWeight: '500', letterSpacing: 3, textTransform: 'uppercase', color: colors.clay, marginTop: 2 }}>
           Prayer Wall
         </Text>
         <Text style={{ fontSize: 28, fontWeight: '600', letterSpacing: -0.3, marginTop: 6, color: colors.ink }}>
@@ -46,6 +47,7 @@ export function SignInScreen() {
               value={ui.signinName}
               onChangeText={onSigninName}
               placeholder="Name"
+              autoCapitalize="words"
               style={styles.input}
               placeholderTextColor="rgba(38,34,29,.35)"
             />
@@ -98,8 +100,7 @@ export function SignInScreen() {
       />
       <Pill label="Text a code to this number" onPress={requestCode} variant="outline" style={{ marginTop: 10 }} />
       <Text style={{ marginTop: 18, textAlign: 'center', fontSize: 14, lineHeight: 20, color: colors.inkSoft }}>
-        Pastors, the lead pastor, and the owner enter a PIN after this step.{'\n'}
-        First person to sign in becomes the church owner.
+        Pastors, the lead pastor, and the owner enter a PIN after this step.
       </Text>
     </ScrollView>
   );

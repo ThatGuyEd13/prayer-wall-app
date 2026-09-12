@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
+import { Text } from '../components/AppText';
 import { colors, dotFor, initialOf, radius, shadow } from '../theme';
 import { Card, DarkCard } from '../components/Card';
 import { Pill } from '../components/Pill';
@@ -7,18 +8,16 @@ import { useApp } from '../store';
 import { isLeaderRole } from '../types';
 
 export function WallScreen() {
-  const { db, ui, set, currentUser, prayFor, startPraySession } = useApp();
+  const { db, ui, set, currentUser, prayFor, startPraySession, openRequestDetail } = useApp();
   const me = currentUser!;
   const leader = isLeaderRole(me.role);
 
   const open = useMemo(() => db.requests.filter((r) => !r.answeredAt), [db.requests]);
-  const requestsOnly = useMemo(() => open.filter((r) => r.kind === 'request'), [open]);
-  const waiting = useMemo(() => requestsOnly.filter((r) => !r.prayedBy.some((p) => p.userId === me.id)), [requestsOnly, me.id]);
   const visible = useMemo(
     () => open.filter((r) => leader || r.audience === 'church' || r.ownerId === me.id),
     [open, leader, me.id],
   );
-  const visWaiting = useMemo(
+  const waiting = useMemo(
     () => visible.filter((r) => r.kind === 'request' && !r.prayedBy.some((p) => p.userId === me.id)),
     [visible, me.id],
   );
@@ -35,14 +34,14 @@ export function WallScreen() {
     ? waiting.length === 0
       ? 'Every request has been prayed over'
       : `${waiting.length} ${waiting.length === 1 ? 'request is' : 'requests are'} waiting`
-    : visWaiting.length === 0
+    : waiting.length === 0
     ? 'The wall is covered today'
-    : `${visWaiting.length} ${visWaiting.length === 1 ? 'neighbor needs' : 'neighbors need'} prayer`;
+    : `${waiting.length} ${waiting.length === 1 ? 'neighbor needs' : 'neighbors need'} prayer`;
 
   return (
     <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 160, gap: 14 }} style={{ flex: 1, backgroundColor: colors.ground }}>
       <DarkCard>
-        <Text style={{ fontSize: 11, fontWeight: '600', letterSpacing: 2, textTransform: 'uppercase', color: colors.clayLight }}>
+        <Text style={{ fontSize: 11, fontWeight: '500', letterSpacing: 2, textTransform: 'uppercase', color: colors.clayLight }}>
           {leader ? 'Every request, including pastors-only' : 'Shared with the church'}
         </Text>
         <Text style={{ fontSize: 26, fontWeight: '600', letterSpacing: -0.4, color: '#f8f4ec' }}>{waitingLine}</Text>
@@ -98,40 +97,48 @@ export function WallScreen() {
         const prayed = p.prayedBy.some((x) => x.userId === me.id);
         return (
           <Card key={p.id}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: dotFor(p.id), alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ color: '#fdfaf4', fontWeight: '600', fontSize: 16 }}>{initialOf(p.ownerName)}</Text>
+            <Pressable onPress={() => openRequestDetail(p.id)} style={{ gap: 12 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: dotFor(p.id), alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={{ color: '#fdfaf4', fontWeight: '600', fontSize: 16 }}>{initialOf(p.ownerName)}</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontWeight: '600', fontSize: 17, letterSpacing: -0.2, color: colors.ink }}>{p.ownerName}</Text>
+                  <Text style={{ fontSize: 14, color: colors.inkSoft }}>
+                    {new Date(p.createdAt).toLocaleDateString()} · {p.audience === 'church' ? 'Whole church' : 'Pastors only'}
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    paddingHorizontal: 12,
+                    paddingVertical: 5,
+                    borderRadius: radius.pill,
+                    backgroundColor: p.kind === 'praise' ? colors.praiseBg : colors.clayTint,
+                  }}
+                >
+                  <Text style={{ fontWeight: '600', fontSize: 12, color: p.kind === 'praise' ? colors.praise : colors.clayDeep }}>{p.tag}</Text>
+                </View>
               </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontWeight: '600', fontSize: 17, letterSpacing: -0.2, color: colors.ink }}>{p.ownerName}</Text>
-                <Text style={{ fontSize: 14, color: colors.inkSoft }}>
-                  {new Date(p.createdAt).toLocaleDateString()} · {p.audience === 'church' ? 'Whole church' : 'Pastors only'}
-                </Text>
-              </View>
-              <View
-                style={{
-                  paddingHorizontal: 12,
-                  paddingVertical: 5,
-                  borderRadius: radius.pill,
-                  backgroundColor: p.kind === 'praise' ? colors.praiseBg : colors.clayTint,
-                }}
-              >
-                <Text style={{ fontWeight: '600', fontSize: 12, color: p.kind === 'praise' ? colors.praise : colors.clayDeep }}>{p.tag}</Text>
-              </View>
-            </View>
-            <Text style={{ fontSize: 17, lineHeight: 24, color: colors.ink }}>{p.text}</Text>
+              <Text style={{ fontSize: 17, lineHeight: 24, color: colors.ink }}>{p.text}</Text>
+            </Pressable>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              {leader && (
-                <Pill
-                  label={prayed ? 'Prayed — they were told' : 'I prayed'}
-                  onPress={() => prayFor(p.id)}
-                  bg={prayed ? colors.clay : 'transparent'}
-                  fg={prayed ? '#f8f4ec' : colors.clay}
-                  bc={prayed ? colors.clay : 'rgba(140,98,66,.4)'}
-                  style={{ minHeight: 46, paddingHorizontal: 18 }}
-                />
-              )}
-              <Text style={{ flex: 1, fontSize: 14, color: colors.inkSoft }}>{p.prayedBy.length} have prayed</Text>
+              <Pill
+                label={p.kind === 'praise' ? 'Hallelujah 🙌' : prayed ? 'Prayed — they were told' : 'I prayed'}
+                onPress={() => prayFor(p.id)}
+                bg={prayed ? colors.clay : 'transparent'}
+                fg={prayed ? '#f8f4ec' : p.kind === 'praise' ? colors.clayDeep : colors.clay}
+                bc={prayed ? colors.clay : 'rgba(140,98,66,.4)'}
+                style={{ minHeight: 46, paddingHorizontal: 18 }}
+              />
+              <Pressable onPress={() => openRequestDetail(p.id)} style={{ flex: 1 }}>
+                <Text style={{ fontSize: 14, color: colors.inkSoft }} numberOfLines={2}>
+                  {p.prayedBy.length === 0
+                    ? p.kind === 'praise'
+                      ? 'Be the first to celebrate'
+                      : 'Be the first to pray'
+                    : p.prayedBy.map((x) => x.name).join(', ')}
+                </Text>
+              </Pressable>
             </View>
           </Card>
         );

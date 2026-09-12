@@ -1,16 +1,19 @@
 import React from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
+import { Text } from '../components/AppText';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../theme';
 import { Keypad } from '../components/Keypad';
 import { Pill } from '../components/Pill';
+import { LockIcon } from '../components/Icons';
 import { useApp } from '../store';
 
 export function PinScreen() {
   const insets = useSafeAreaInsets();
-  const { ui, currentUser, pinPress, backToSignin } = useApp();
-  const kicker = currentUser?.role === 'owner' ? 'Owner access' : currentUser?.role === 'lead_pastor' ? 'Lead pastor access' : 'Pastoral access';
-  const who = currentUser?.role === 'owner' ? 'The owner account' : currentUser?.role === 'lead_pastor' ? 'A lead pastor' : 'A pastor';
+  const { ui, pinPress, backToSignin } = useApp();
+  const role = ui.pendingRole;
+  const kicker = role === 'owner' ? 'Owner access' : role === 'lead_pastor' ? 'Lead pastor access' : 'Pastoral access';
+  const who = role === 'owner' ? 'The owner account' : role === 'lead_pastor' ? 'A lead pastor' : 'A pastor';
   const dotCount = 5;
 
   return (
@@ -23,7 +26,10 @@ export function PinScreen() {
         paddingBottom: insets.bottom + 22,
       }}
     >
-      <Text style={{ fontSize: 11, fontWeight: '600', letterSpacing: 2, textTransform: 'uppercase', color: colors.clayLight }}>{kicker}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9 }}>
+        <LockIcon size={17} color={colors.clayLight} strokeWidth={1.7} />
+        <Text style={{ fontSize: 11, fontWeight: '500', letterSpacing: 2, textTransform: 'uppercase', color: colors.clayLight }}>{kicker}</Text>
+      </View>
       <Text style={{ fontSize: 28, fontWeight: '600', letterSpacing: -0.3, marginTop: 14, color: '#f8f4ec' }}>Enter your PIN</Text>
       <Text style={{ marginTop: 10, fontSize: 16, lineHeight: 22, color: 'rgba(248,244,236,.75)' }}>
         {who} can see every request in the church, so this second step is required each time.

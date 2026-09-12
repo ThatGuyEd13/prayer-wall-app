@@ -1,13 +1,25 @@
 import React from 'react';
-import { Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Modal, Pressable, ScrollView, TextInput, View } from 'react-native';
+import { Text } from './AppText';
 import { colors, radius } from '../theme';
 import { Pill } from './Pill';
 import { useApp } from '../store';
 import { TAGS } from '../types';
 
+const REQUEST_TAGS = TAGS.filter((t) => t !== 'Thanks');
+
 export function ComposeSheet() {
   const { ui, set, postRequest } = useApp();
   if (!ui.composeOpen) return null;
+  const isPraise = ui.draftKind === 'praise';
+
+  const setKind = (kind: 'request' | 'praise') => {
+    if (kind === 'praise') {
+      set({ draftKind: 'praise', draftTag: 'Thanks' });
+    } else {
+      set({ draftKind: 'request', draftTag: 'Sickness' });
+    }
+  };
 
   return (
     <Modal transparent animationType="slide" visible onRequestClose={() => set({ composeOpen: false })}>
@@ -18,11 +30,40 @@ export function ComposeSheet() {
           contentContainerStyle={{ borderTopLeftRadius: 30, borderTopRightRadius: 30, backgroundColor: colors.ground, padding: 20, paddingBottom: 34, gap: 14 }}
         >
           <View style={{ width: 44, height: 5, borderRadius: 3, backgroundColor: 'rgba(38,34,29,.18)', alignSelf: 'center' }} />
-          <Text style={{ fontSize: 24, fontWeight: '600', letterSpacing: -0.3, color: colors.ink }}>Ask for prayer</Text>
+          <Text style={{ fontSize: 24, fontWeight: '600', letterSpacing: -0.3, color: colors.ink }}>
+            {isPraise ? 'Share a praise' : 'Ask for prayer'}
+          </Text>
+
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            {(['request', 'praise'] as const).map((k) => {
+              const active = ui.draftKind === k;
+              return (
+                <Pressable
+                  key={k}
+                  onPress={() => setKind(k)}
+                  style={{
+                    flex: 1,
+                    minHeight: 48,
+                    borderRadius: radius.pill,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: active ? colors.clay : 'transparent',
+                    borderWidth: 1,
+                    borderColor: active ? colors.clay : 'rgba(38,34,29,.18)',
+                  }}
+                >
+                  <Text style={{ fontWeight: '600', fontSize: 14, color: active ? '#f8f4ec' : colors.ink }}>
+                    {k === 'request' ? 'Prayer request' : 'Praise'}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
           <TextInput
             value={ui.draftText}
             onChangeText={(v) => set({ draftText: v })}
-            placeholder="Say it plain. We'll pray it."
+            placeholder={isPraise ? 'Type praise here' : 'Type prayer here'}
             multiline
             style={{ minHeight: 110, borderRadius: 18, backgroundColor: colors.card, borderWidth: 1, borderColor: 'rgba(38,34,29,.12)', fontSize: 17, lineHeight: 22, padding: 14, textAlignVertical: 'top', color: colors.ink }}
           />
@@ -53,7 +94,7 @@ export function ComposeSheet() {
             })}
           </View>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-            {TAGS.map((t) => {
+            {(isPraise ? ['Thanks'] : REQUEST_TAGS).map((t) => {
               const active = ui.draftTag === t;
               return (
                 <Pressable
@@ -76,7 +117,7 @@ export function ComposeSheet() {
             })}
           </View>
           <Pill
-            label={ui.draftAudience === 'pastors' ? 'Send to the pastors' : 'Post to the wall'}
+            label={isPraise ? 'Post the praise' : ui.draftAudience === 'pastors' ? 'Send to the pastors' : 'Post to the wall'}
             onPress={postRequest}
             disabled={!ui.draftText.trim()}
           />
