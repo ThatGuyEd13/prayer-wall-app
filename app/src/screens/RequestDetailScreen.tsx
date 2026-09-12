@@ -1,17 +1,17 @@
-import React, { useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
+import React, { useMemo } from 'react';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
 import { Text } from '../components/AppText';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, dotFor, initialOf, radius, shadow } from '../theme';
 import { Card } from '../components/Card';
 import { Pill } from '../components/Pill';
+import { PostMenu } from '../components/PostMenu';
 import { useApp } from '../store';
 
 export function RequestDetailScreen() {
   const insets = useSafeAreaInsets();
-  const { db, ui, currentUser, closeRequestDetail, prayFor, postComment, deleteRequest, toggleAnswered, set } = useApp();
+  const { db, ui, currentUser, closeRequestDetail, prayFor, postComment, set } = useApp();
   const me = currentUser!;
-  const [menuOpen, setMenuOpen] = useState(false);
 
   const request = db.requests.find((r) => r.id === ui.viewingRequestId);
   const comments = useMemo(
@@ -22,13 +22,6 @@ export function RequestDetailScreen() {
   if (!request) return null;
   const prayed = request.prayedBy.some((p) => p.userId === me.id);
   const isPraise = request.kind === 'praise';
-  const isOwner = request.ownerId === me.id;
-  const canDelete = isOwner || me.role === 'lead_pastor' || me.role === 'owner';
-  const canResolve = isOwner && !request.answeredAt;
-
-  const description = canResolve
-    ? 'Resolve moves it to the answered log. Delete removes it for everyone.'
-    : 'Delete removes it for everyone.';
 
   return (
     <KeyboardAvoidingView
@@ -56,14 +49,7 @@ export function RequestDetailScreen() {
         <Text style={{ fontSize: 19, fontWeight: '600', letterSpacing: -0.2, color: colors.ink, flex: 1 }}>
           {isPraise ? 'Praise' : 'Request'}
         </Text>
-        {canDelete && (
-          <Pressable
-            onPress={() => setMenuOpen(true)}
-            style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' }}
-          >
-            <Text style={{ fontSize: 18, letterSpacing: 1, color: colors.ink }}>•••</Text>
-          </Pressable>
-        )}
+        <PostMenu request={request} style={{ width: 38, height: 38, borderRadius: 19 }} />
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, gap: 14 }} style={{ flex: 1 }}>
@@ -168,53 +154,6 @@ export function RequestDetailScreen() {
           style={{ minHeight: 46, paddingHorizontal: 20 }}
         />
       </View>
-
-      {menuOpen && (
-        <Modal transparent animationType="slide" visible onRequestClose={() => setMenuOpen(false)}>
-          <View style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' }}>
-            <Pressable style={{ flex: 1 }} onPress={() => setMenuOpen(false)} />
-            <View
-              style={{
-                borderTopLeftRadius: 24,
-                borderTopRightRadius: 24,
-                backgroundColor: colors.ground,
-                padding: 20,
-                paddingBottom: insets.bottom + 20,
-                gap: 14,
-              }}
-            >
-              <View style={{ width: 44, height: 5, borderRadius: 3, backgroundColor: 'rgba(38,34,29,.18)', alignSelf: 'center' }} />
-              <Text style={{ fontSize: 24, fontWeight: '600', letterSpacing: -0.3, color: colors.ink }}>
-                {request.ownerName}&rsquo;s {isPraise ? 'praise' : 'request'}
-              </Text>
-              <Text style={{ fontSize: 15, lineHeight: 21, color: colors.inkSoft }}>{description}</Text>
-              {canResolve && (
-                <Pill
-                  label="Resolve"
-                  onPress={() => {
-                    setMenuOpen(false);
-                    toggleAnswered(request.id);
-                  }}
-                  bg={colors.praiseSolid}
-                  fg="#fdfaf4"
-                  bc={colors.praiseSolid}
-                />
-              )}
-              <Pill
-                label="Delete"
-                onPress={() => {
-                  setMenuOpen(false);
-                  deleteRequest(request.id);
-                }}
-                bg="transparent"
-                fg={colors.danger}
-                bc={colors.dangerBorder}
-              />
-              <Pill label="Cancel" onPress={() => setMenuOpen(false)} variant="ghost" />
-            </View>
-          </View>
-        </Modal>
-      )}
     </KeyboardAvoidingView>
   );
 }

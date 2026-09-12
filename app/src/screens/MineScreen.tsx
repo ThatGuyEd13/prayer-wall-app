@@ -4,6 +4,7 @@ import { Text } from '../components/AppText';
 import { colors, dotFor, initialOf, radius, shadow } from '../theme';
 import { Card, DarkCard, SectionLabel } from '../components/Card';
 import { Pill } from '../components/Pill';
+import { PostMenu } from '../components/PostMenu';
 import { useApp } from '../store';
 import { ROLE_LABEL, isLeaderRole } from '../types';
 import { LockIcon } from '../components/Icons';
@@ -49,24 +50,25 @@ export function MineScreen() {
         const done = !!r.answeredAt;
         return (
           <Card key={r.id}>
-            <Pressable onPress={() => openRequestDetail(r.id)} style={{ gap: 12 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                <Text style={{ flex: 1, fontSize: 14, color: colors.inkSoft }}>
-                  {new Date(r.createdAt).toLocaleDateString()} · {r.prayedBy.length} prayed
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <Text style={{ flex: 1, fontSize: 14, color: colors.inkSoft }}>
+                {new Date(r.createdAt).toLocaleDateString()} · {r.prayedBy.length} prayed
+              </Text>
+              <View
+                style={{
+                  paddingHorizontal: 12,
+                  paddingVertical: 5,
+                  borderRadius: radius.pill,
+                  backgroundColor: done ? colors.praiseBg : colors.clayTint,
+                }}
+              >
+                <Text style={{ fontWeight: '600', fontSize: 12, color: done ? colors.praise : colors.clayDeep }}>
+                  {done ? 'Answered' : r.audience === 'pastors' ? 'With the pastors' : 'On the wall'}
                 </Text>
-                <View
-                  style={{
-                    paddingHorizontal: 12,
-                    paddingVertical: 5,
-                    borderRadius: radius.pill,
-                    backgroundColor: done ? colors.praiseBg : colors.clayTint,
-                  }}
-                >
-                  <Text style={{ fontWeight: '600', fontSize: 12, color: done ? colors.praise : colors.clayDeep }}>
-                    {done ? 'Answered' : r.audience === 'pastors' ? 'With the pastors' : 'On the wall'}
-                  </Text>
-                </View>
               </View>
+              <PostMenu request={r} />
+            </View>
+            <Pressable onPress={() => openRequestDetail(r.id)} style={{ gap: 12 }}>
               <Text style={{ fontSize: 17, lineHeight: 24, color: colors.ink }}>{r.text}</Text>
               <Text style={{ fontSize: 14, color: colors.inkSoft }}>
                 {r.audience === 'pastors' ? 'Visible to the pastors only' : 'Shared with the whole church'}

@@ -4,6 +4,7 @@ import { Text } from '../components/AppText';
 import { colors, dotFor, initialOf, radius, shadow } from '../theme';
 import { Card, DarkCard } from '../components/Card';
 import { Pill } from '../components/Pill';
+import { PostMenu } from '../components/PostMenu';
 import { useApp } from '../store';
 import { isLeaderRole } from '../types';
 
@@ -97,8 +98,8 @@ export function WallScreen() {
         const prayed = p.prayedBy.some((x) => x.userId === me.id);
         return (
           <Card key={p.id}>
-            <Pressable onPress={() => openRequestDetail(p.id)} style={{ gap: 12 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <Pressable onPress={() => openRequestDetail(p.id)} style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                 <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: dotFor(p.id), alignItems: 'center', justifyContent: 'center' }}>
                   <Text style={{ color: '#fdfaf4', fontWeight: '600', fontSize: 16 }}>{initialOf(p.ownerName)}</Text>
                 </View>
@@ -108,17 +109,20 @@ export function WallScreen() {
                     {new Date(p.createdAt).toLocaleDateString()} · {p.audience === 'church' ? 'Whole church' : 'Pastors only'}
                   </Text>
                 </View>
-                <View
-                  style={{
-                    paddingHorizontal: 12,
-                    paddingVertical: 5,
-                    borderRadius: radius.pill,
-                    backgroundColor: p.kind === 'praise' ? colors.praiseBg : colors.clayTint,
-                  }}
-                >
-                  <Text style={{ fontWeight: '600', fontSize: 12, color: p.kind === 'praise' ? colors.praise : colors.clayDeep }}>{p.tag}</Text>
-                </View>
+              </Pressable>
+              <View
+                style={{
+                  paddingHorizontal: 12,
+                  paddingVertical: 5,
+                  borderRadius: radius.pill,
+                  backgroundColor: p.kind === 'praise' ? colors.praiseBg : colors.clayTint,
+                }}
+              >
+                <Text style={{ fontWeight: '600', fontSize: 12, color: p.kind === 'praise' ? colors.praise : colors.clayDeep }}>{p.tag}</Text>
               </View>
+              <PostMenu request={p} />
+            </View>
+            <Pressable onPress={() => openRequestDetail(p.id)}>
               <Text style={{ fontSize: 17, lineHeight: 24, color: colors.ink }}>{p.text}</Text>
             </Pressable>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
