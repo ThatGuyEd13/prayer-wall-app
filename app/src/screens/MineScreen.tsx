@@ -18,6 +18,11 @@ export function MineScreen() {
   const notifOn = notifSupported && typeof Notification !== 'undefined' && Notification.permission === 'granted';
   const mineOwn = useMemo(() => db.requests.filter((r) => r.ownerId === me.id && !r.answeredAt), [db.requests, me.id]);
   const canManage = me.role === 'lead_pastor' || me.role === 'owner';
+  const commentCounts = useMemo(() => {
+    const m = new Map<string, number>();
+    db.comments.forEach((c) => m.set(c.requestId, (m.get(c.requestId) || 0) + 1));
+    return m;
+  }, [db.comments]);
 
   return (
     <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 160, gap: 14 }} style={{ flex: 1, backgroundColor: colors.ground }}>
@@ -71,9 +76,14 @@ export function MineScreen() {
             </View>
             <Pressable onPress={() => openRequestDetail(r.id)} style={{ gap: 12 }}>
               <Text style={{ fontSize: 17, lineHeight: 24, color: colors.ink }}>{r.text}</Text>
-              <Text style={{ fontSize: 14, color: colors.inkSoft }}>
-                {r.audience === 'pastors' ? 'Visible to the pastors only' : 'Shared with the whole church'}
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <Text style={{ flex: 1, fontSize: 14, color: colors.inkSoft }}>
+                  {r.audience === 'pastors' ? 'Visible to the pastors only' : 'Shared with the whole church'}
+                </Text>
+                {!!commentCounts.get(r.id) && (
+                  <Text style={{ fontSize: 14, color: colors.inkSoft }}>💬 {commentCounts.get(r.id)}</Text>
+                )}
+              </View>
             </Pressable>
             {canManage && (
               <Pill

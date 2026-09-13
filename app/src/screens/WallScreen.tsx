@@ -23,6 +23,12 @@ export function WallScreen() {
     [visible, me.id],
   );
 
+  const commentCounts = useMemo(() => {
+    const m = new Map<string, number>();
+    db.comments.forEach((c) => m.set(c.requestId, (m.get(c.requestId) || 0) + 1));
+    return m;
+  }, [db.comments]);
+
   const feed = useMemo(() => {
     return visible.filter((r) => {
       if (ui.wallFilter === 'Praise') return r.kind === 'praise';
@@ -144,6 +150,11 @@ export function WallScreen() {
                     : p.prayedBy.map((x) => x.name).join(', ')}
                 </Text>
               </Pressable>
+              {!!commentCounts.get(p.id) && (
+                <Pressable onPress={() => openRequestDetail(p.id)} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Text style={{ fontSize: 14, color: colors.inkSoft }}>💬 {commentCounts.get(p.id)}</Text>
+                </Pressable>
+              )}
             </View>
           </Card>
         );
