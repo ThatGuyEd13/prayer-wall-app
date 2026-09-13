@@ -6,7 +6,7 @@ import { colors, dotFor, initialOf, radius, shadow } from '../theme';
 import { DarkCard, SectionLabel } from '../components/Card';
 import { Pill } from '../components/Pill';
 import { useApp } from '../store';
-import { ROLE_LABEL, ROLE_LADDER, User, canManageRoles } from '../types';
+import { ROLE_LABEL, ROLE_LADDER, Role, User, canManageRoles } from '../types';
 import { LockIcon } from '../components/Icons';
 
 const MATRIX = [
@@ -33,8 +33,12 @@ export function AdminScreen() {
 
   const roleOptions = isOwner ? ROLE_LADDER : ROLE_LADDER.filter((r) => r !== 'lead_pastor');
 
+  const roleRank = (role: string) => (role === 'owner' ? ROLE_LADDER.length : ROLE_LADDER.indexOf(role as Role));
   const people = useMemo(
-    () => db.users.filter((u) => u.role !== 'owner' || isOwner).sort((a, b) => a.createdAt - b.createdAt),
+    () =>
+      db.users
+        .filter((u) => u.role !== 'owner' || isOwner)
+        .sort((a, b) => roleRank(b.role) - roleRank(a.role) || a.createdAt - b.createdAt),
     [db.users, isOwner],
   );
 
