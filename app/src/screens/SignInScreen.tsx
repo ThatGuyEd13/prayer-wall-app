@@ -46,11 +46,14 @@ export function SignInScreen() {
             <TextInput
               value={ui.signinName}
               onChangeText={onSigninName}
-              placeholder="Name"
+              placeholder="Travis M."
               autoCapitalize="words"
               style={styles.input}
               placeholderTextColor="rgba(38,34,29,.35)"
             />
+            <Text style={{ fontSize: 14, lineHeight: 20, color: colors.inkSoft }}>
+              Just your first name and last initial, like the example above.
+            </Text>
           </View>
         )}
         <View style={{ gap: 7 }}>
