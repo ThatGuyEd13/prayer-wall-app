@@ -6,7 +6,7 @@ import { colors } from '../theme';
 import { Keypad } from '../components/Keypad';
 import { Pill } from '../components/Pill';
 import { LockIcon } from '../components/Icons';
-import { useApp } from '../store';
+import { pinLengthFor, useApp } from '../store';
 
 export function PinScreen() {
   const insets = useSafeAreaInsets();
@@ -14,7 +14,7 @@ export function PinScreen() {
   const role = ui.pendingRole;
   const kicker = role === 'owner' ? 'Owner access' : role === 'lead_pastor' ? 'Lead pastor access' : 'Pastoral access';
   const who = role === 'owner' ? 'The owner account' : role === 'lead_pastor' ? 'A lead pastor' : 'A pastor';
-  const dotCount = 4;
+  const dotCount = pinLengthFor(ui.pendingName);
 
   return (
     <View

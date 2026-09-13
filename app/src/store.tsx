@@ -25,6 +25,11 @@ function phoneToEmail(phone: string): string {
   return `phone${phone}@phone.prayerwall.local`;
 }
 
+// Pastor Emily's PIN is 4 digits; everyone else who needs a PIN uses 5.
+export function pinLengthFor(name: string | null): number {
+  return name === 'Pastor Emily' ? 4 : 5;
+}
+
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -55,6 +60,7 @@ interface UIState {
   auth: AuthStep;
   sessionUserId: string | null;
   pendingRole: Role | null;
+  pendingName: string | null;
 
   signinPhone: string;
   signinName: string;
@@ -111,6 +117,7 @@ const initialUI: UIState = {
   auth: 'signin',
   sessionUserId: null,
   pendingRole: null,
+  pendingName: null,
   signinPhone: '',
   signinName: '',
   signinPassword: '',
@@ -302,7 +309,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const { data: profile } = await supabase.from('profiles').select('id,name,role').eq('id', session.user.id).single();
         const role = profile?.role;
         if (role && needsPin(role)) {
-          set({ auth: hasPinData ? 'pin' : 'setpin', sessionUserId: session.user.id, pendingRole: role });
+          set({ auth: hasPinData ? 'pin' : 'setpin', sessionUserId: session.user.id, pendingRole: role, pendingName: profile?.name ?? null });
         } else {
           await refreshAll();
           set({ auth: 'authenticated', sessionUserId: session.user.id, tab: 'wall' });
@@ -482,10 +489,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // The profile row is created by a database trigger right after sign-up,
   // which can lag a beat behind the signUp() call returning. Retry briefly
   // rather than racing it.
-  const fetchOwnRoleWithRetry = useCallback(async (userId: string): Promise<Role | null> => {
+  const fetchOwnRoleWithRetry = useCallback(async (userId: string): Promise<{ role: Role; name: string } | null> => {
     for (let attempt = 0; attempt < 8; attempt++) {
-      const { data: profile } = await supabase.from('profiles').select('role').eq('id', userId).maybeSingle();
-      if (profile?.role) return profile.role;
+      const { data: profile } = await supabase.from('profiles').select('role,name').eq('id', userId).maybeSingle();
+      if (profile?.role) return { role: profile.role, name: profile.name };
       await new Promise((r) => setTimeout(r, 250));
     }
     return null;
@@ -493,13 +500,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const proceedPastCredentials = useCallback(
     async (userId: string) => {
-      const role = await fetchOwnRoleWithRetry(userId);
-      if (role && needsPin(role)) {
+      const profile = await fetchOwnRoleWithRetry(userId);
+      if (profile && needsPin(profile.role)) {
         const { data: hasPinData } = await supabase.rpc('has_pin');
         set({
           auth: hasPinData ? 'pin' : 'setpin',
           sessionUserId: userId,
-          pendingRole: role,
+          pendingRole: profile.role,
+          pendingName: profile.name,
           pinEntry: '',
           pinMessage: '',
           pinBad: false,
@@ -652,14 +660,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setUi((s) => ({ ...s, pinEntry: s.pinEntry.slice(0, -1), pinMessage: '', pinBad: false }));
         return;
       }
+      const need = pinLengthFor(uiRef.current.pendingName);
       setUi((s) => {
-        if (s.pinEntry.length >= 4) return s;
+        if (s.pinEntry.length >= need) return s;
         const next = s.pinEntry + k;
         return { ...s, pinEntry: next, pinMessage: '', pinBad: false };
       });
       (async () => {
         const cur = uiRef.current.pinEntry + k;
-        if (cur.length < 4) return;
+        if (cur.length < need) return;
         const { data: ok } = await supabase.rpc('verify_pin', { pin: cur });
         if (ok) {
           set({ pinEntry: cur, pinMessage: 'Unlocked', pinBad: false });
@@ -691,9 +700,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
       setUi((s) => {
         if (s.setPinStage === 'first') {
-          if (s.setPinEntry.length >= 4) return s;
+          const need = pinLengthFor(s.pendingName);
+          if (s.setPinEntry.length >= need) return s;
           const next = s.setPinEntry + k;
-          return next.length === 4 ? { ...s, setPinEntry: next, setPinStage: 'confirm', setPinError: '' } : { ...s, setPinEntry: next };
+          return next.length === need ? { ...s, setPinEntry: next, setPinStage: 'confirm', setPinError: '' } : { ...s, setPinEntry: next };
         }
         if (s.setPinConfirm.length >= s.setPinEntry.length) return s;
         const nextConfirm = s.setPinConfirm + k;

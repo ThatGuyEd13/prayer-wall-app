@@ -6,14 +6,14 @@ import { colors } from '../theme';
 import { Keypad } from '../components/Keypad';
 import { Pill } from '../components/Pill';
 import { LockIcon } from '../components/Icons';
-import { useApp } from '../store';
+import { pinLengthFor, useApp } from '../store';
 
 export function SetPinScreen() {
   const insets = useSafeAreaInsets();
   const { ui, setPinPress, backToSignin } = useApp();
   const stage = ui.setPinStage;
   const entry = stage === 'first' ? ui.setPinEntry : ui.setPinConfirm;
-  const target = 4;
+  const target = pinLengthFor(ui.pendingName);
 
   return (
     <View
