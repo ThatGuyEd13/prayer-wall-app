@@ -12,6 +12,7 @@ import {
   PrayerLogEntry,
   Request,
   Role,
+  ROLE_LABEL,
   User,
   isLeaderRole,
   needsPin,
@@ -184,7 +185,7 @@ interface AppContextValue {
   dismissNotifPrompt: () => void;
   acceptNotifPrompt: () => Promise<void>;
 
-  cycleRole: (userId: string) => void;
+  setRole: (userId: string, role: Role) => void;
   sendBroadcast: () => void;
   exportCsv: () => Promise<string>;
   transferOwnership: (userId: string) => void;
@@ -866,17 +867,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await refreshAll();
   }, [me, refreshAll]);
 
-  const cycleRole = useCallback(
-    async (userId: string) => {
+  const setRole = useCallback(
+    async (userId: string, role: Role) => {
       const target = db.users.find((u) => u.id === userId);
       if (!target) return;
-      const { error } = await supabase.rpc('cycle_role', { target_id: userId });
+      const { error } = await supabase.rpc('set_role', { target_id: userId, new_role: role });
       if (error) {
         say(error.message);
         return;
       }
       await refreshAll();
-      say(`${target.name}'s role was updated.`);
+      say(`${target.name} is now ${ROLE_LABEL[role]}.`);
     },
     [db.users, say, refreshAll],
   );
@@ -1022,7 +1023,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     enableNotifications,
     dismissNotifPrompt,
     acceptNotifPrompt,
-    cycleRole,
+    setRole,
     sendBroadcast,
     exportCsv,
     transferOwnership,

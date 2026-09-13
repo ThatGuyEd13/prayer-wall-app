@@ -1,10 +1,12 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Modal, Pressable, ScrollView, View } from 'react-native';
 import { Text } from '../components/AppText';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, dotFor, initialOf, radius, shadow } from '../theme';
 import { DarkCard, SectionLabel } from '../components/Card';
+import { Pill } from '../components/Pill';
 import { useApp } from '../store';
-import { ROLE_LABEL, canManageRoles } from '../types';
+import { ROLE_LABEL, ROLE_LADDER, User, canManageRoles } from '../types';
 import { LockIcon } from '../components/Icons';
 
 const MATRIX = [
@@ -20,12 +22,16 @@ const MATRIX = [
 ];
 
 export function AdminScreen() {
-  const { db, currentUser, cycleRole, set, say } = useApp();
+  const { db, currentUser, setRole, set, say } = useApp();
   const me = currentUser!;
   const isOwner = me.role === 'owner';
   const canChangeRoles = canManageRoles(me.role);
   const scrollRef = useRef<ScrollView>(null);
   const [peopleY, setPeopleY] = useState(0);
+  const [pickerFor, setPickerFor] = useState<User | null>(null);
+  const insets = useSafeAreaInsets();
+
+  const roleOptions = isOwner ? ROLE_LADDER : ROLE_LADDER.filter((r) => r !== 'lead_pastor');
 
   const people = useMemo(
     () => db.users.filter((u) => u.role !== 'owner' || isOwner).sort((a, b) => a.createdAt - b.createdAt),
@@ -38,6 +44,7 @@ export function AdminScreen() {
   };
 
   return (
+    <>
     <ScrollView ref={scrollRef} contentContainerStyle={{ padding: 20, paddingBottom: 160, gap: 14 }} style={{ flex: 1, backgroundColor: colors.ground }}>
       <DarkCard>
         <Text style={{ fontSize: 11, fontWeight: '500', letterSpacing: 2, textTransform: 'uppercase', color: colors.clayLight }}>
@@ -63,7 +70,7 @@ export function AdminScreen() {
         <SectionLabel>People</SectionLabel>
       </View>
       {people.map((p) => {
-        const locked = !canChangeRoles || p.role === 'owner' || (p.role === 'lead_pastor' && !isOwner);
+        const locked = !canChangeRoles || p.role === 'owner';
         return (
           <View
             key={p.id}
@@ -81,7 +88,7 @@ export function AdminScreen() {
             </View>
             <Pressable
               disabled={locked}
-              onPress={() => cycleRole(p.id)}
+              onPress={() => setPickerFor(p)}
               style={{
                 minHeight: 40,
                 paddingHorizontal: 13,
@@ -146,6 +153,57 @@ export function AdminScreen() {
         </>
       )}
     </ScrollView>
+
+    {pickerFor && (
+      <Modal transparent animationType="slide" visible onRequestClose={() => setPickerFor(null)}>
+        <View style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' }}>
+          <Pressable style={{ flex: 1 }} onPress={() => setPickerFor(null)} />
+          <View
+            style={{
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              backgroundColor: colors.ground,
+              padding: 20,
+              paddingBottom: insets.bottom + 20,
+              gap: 10,
+            }}
+          >
+            <View style={{ width: 44, height: 5, borderRadius: 3, backgroundColor: 'rgba(38,34,29,.18)', alignSelf: 'center', marginBottom: 4 }} />
+            <Text style={{ fontSize: 24, fontWeight: '600', letterSpacing: -0.3, color: colors.ink }}>{pickerFor.name}&rsquo;s role</Text>
+            <Text style={{ fontSize: 15, lineHeight: 21, color: colors.inkSoft, marginBottom: 6 }}>Pick a role to set it right away.</Text>
+            {roleOptions.map((r) => {
+              const picked = pickerFor.role === r;
+              return (
+                <Pressable
+                  key={r}
+                  onPress={() => {
+                    const person = pickerFor;
+                    setPickerFor(null);
+                    if (r !== person.role) setRole(person.id, r);
+                  }}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 12,
+                    minHeight: 54,
+                    paddingHorizontal: 16,
+                    borderRadius: 16,
+                    backgroundColor: picked ? colors.clayTint : colors.card,
+                    borderWidth: 1,
+                    borderColor: picked ? colors.clay : 'rgba(38,34,29,.1)',
+                  }}
+                >
+                  <Text style={{ flex: 1, fontSize: 16, color: colors.ink }}>{ROLE_LABEL[r]}</Text>
+                  {picked && <Text style={{ color: colors.clay }}>✓</Text>}
+                </Pressable>
+              );
+            })}
+            <Pill label="Cancel" onPress={() => setPickerFor(null)} variant="ghost" />
+          </View>
+        </View>
+      </Modal>
+    )}
+    </>
   );
 }
 
