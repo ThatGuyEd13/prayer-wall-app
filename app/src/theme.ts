@@ -62,10 +62,3 @@ export function dotFor(id: string): string {
 export function initialOf(n: string): string {
   return String(n).replace(/^The /, '').trim().charAt(0).toUpperCase();
 }
-
-// "Travis Medlin" -> "Travis M." — used where a full name is too much detail.
-export function firstNameLastInitial(n: string): string {
-  const parts = String(n).trim().split(/\s+/);
-  if (parts.length < 2) return parts[0] || '';
-  return `${parts[0]} ${parts[parts.length - 1].charAt(0).toUpperCase()}.`;
-}
