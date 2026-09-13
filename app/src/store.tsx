@@ -82,7 +82,7 @@ interface UIState {
   setPinError: string;
 
   tab: 'wall' | 'pray' | 'mine' | 'notices' | 'admin';
-  wallFilter: 'All' | 'Waiting' | 'Praise';
+  wallFilter: 'All' | 'Waiting' | 'Prayers' | 'Praise';
 
   composeOpen: boolean;
   draftText: string;

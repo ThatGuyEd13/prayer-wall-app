@@ -26,6 +26,7 @@ export function WallScreen() {
   const feed = useMemo(() => {
     return visible.filter((r) => {
       if (ui.wallFilter === 'Praise') return r.kind === 'praise';
+      if (ui.wallFilter === 'Prayers') return r.kind === 'request';
       if (ui.wallFilter === 'Waiting') return r.kind === 'request' && !r.prayedBy.some((p) => p.userId === me.id);
       return true;
     });
@@ -65,7 +66,7 @@ export function WallScreen() {
       </Pressable>
 
       <View style={{ flexDirection: 'row', gap: 8 }}>
-        {(['All', 'Praise'] as const).map((f) => {
+        {(['All', 'Prayers', 'Praise'] as const).map((f) => {
           const active = ui.wallFilter === f;
           return (
             <Pressable
