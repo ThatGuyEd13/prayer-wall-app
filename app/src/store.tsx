@@ -653,13 +653,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       setUi((s) => {
-        if (s.pinEntry.length >= 5) return s;
+        if (s.pinEntry.length >= 4) return s;
         const next = s.pinEntry + k;
         return { ...s, pinEntry: next, pinMessage: '', pinBad: false };
       });
       (async () => {
         const cur = uiRef.current.pinEntry + k;
-        if (cur.length < 5) return;
+        if (cur.length < 4) return;
         const { data: ok } = await supabase.rpc('verify_pin', { pin: cur });
         if (ok) {
           set({ pinEntry: cur, pinMessage: 'Unlocked', pinBad: false });
@@ -691,9 +691,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
       setUi((s) => {
         if (s.setPinStage === 'first') {
-          if (s.setPinEntry.length >= 5) return s;
+          if (s.setPinEntry.length >= 4) return s;
           const next = s.setPinEntry + k;
-          return next.length === 5 ? { ...s, setPinEntry: next, setPinStage: 'confirm', setPinError: '' } : { ...s, setPinEntry: next };
+          return next.length === 4 ? { ...s, setPinEntry: next, setPinStage: 'confirm', setPinError: '' } : { ...s, setPinEntry: next };
         }
         if (s.setPinConfirm.length >= s.setPinEntry.length) return s;
         const nextConfirm = s.setPinConfirm + k;

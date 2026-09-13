@@ -13,7 +13,7 @@ export function SetPinScreen() {
   const { ui, setPinPress, backToSignin } = useApp();
   const stage = ui.setPinStage;
   const entry = stage === 'first' ? ui.setPinEntry : ui.setPinConfirm;
-  const target = 5;
+  const target = 4;
 
   return (
     <View

@@ -14,7 +14,7 @@ export function PinScreen() {
   const role = ui.pendingRole;
   const kicker = role === 'owner' ? 'Owner access' : role === 'lead_pastor' ? 'Lead pastor access' : 'Pastoral access';
   const who = role === 'owner' ? 'The owner account' : role === 'lead_pastor' ? 'A lead pastor' : 'A pastor';
-  const dotCount = 5;
+  const dotCount = 4;
 
   return (
     <View
