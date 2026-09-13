@@ -89,7 +89,7 @@ export type AuthStep = 'signin' | 'code' | 'pin' | 'setpin' | 'authenticated';
 
 export type AdminModal = null | 'broadcast' | 'export' | 'transfer' | 'billing' | 'delete';
 
-export const TAGS = ['Sickness', 'Work', 'Family', 'Grief', 'Travel', 'Waiting', 'Thanks'];
+export const TAGS = ['Sickness', 'Work', 'Family', 'Grief', 'Travel', 'Thanks'];
 
 export const PROMPTS: Record<string, string> = {
   Sickness: 'Ask for steady hands on the doctors, rest through the night, and company in the waiting room.',
