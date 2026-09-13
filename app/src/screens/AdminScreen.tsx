@@ -9,6 +9,14 @@ import { useApp } from '../store';
 import { ROLE_LABEL, ROLE_LADDER, Role, User, canManageRoles } from '../types';
 import { LockIcon } from '../components/Icons';
 
+// Pastors show as "Pastor <first name>" — e.g. "Pastor Rachel" — regardless
+// of what full name is on file.
+function displayName(p: User): string {
+  if (p.role !== 'pastor') return p.name;
+  const firstName = p.name.replace(/^Pastor\s+/i, '').trim().split(/\s+/)[0] || p.name;
+  return `Pastor ${firstName}`;
+}
+
 const MATRIX = [
   { cap: 'Post a request', m: 1, p: 1, a: 1, w: 1, l: 1 },
   { cap: 'See own requests only', m: 1, p: 0, a: 0, w: 0, l: 0 },
@@ -87,7 +95,7 @@ export function AdminScreen() {
               <Text style={{ color: '#fdfaf4', fontWeight: '600', fontSize: 15 }}>{initialOf(p.name)}</Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontWeight: '600', fontSize: 17, color: colors.ink }}>{p.name}</Text>
+              <Text style={{ fontWeight: '600', fontSize: 17, color: colors.ink }}>{displayName(p)}</Text>
               <Text style={{ fontSize: 14, color: colors.inkSoft }}>{ROLE_LABEL[p.role]}</Text>
             </View>
             <Pressable
