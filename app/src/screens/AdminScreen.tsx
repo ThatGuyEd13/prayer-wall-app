@@ -2,7 +2,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import { Modal, Pressable, ScrollView, View } from 'react-native';
 import { Text } from '../components/AppText';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, dotFor, initialOf, radius, shadow } from '../theme';
+import { colors, dotFor, firstNameLastInitial, initialOf, radius, shadow } from '../theme';
 import { DarkCard, SectionLabel } from '../components/Card';
 import { Pill } from '../components/Pill';
 import { useApp } from '../store';
@@ -87,7 +87,7 @@ export function AdminScreen() {
               <Text style={{ color: '#fdfaf4', fontWeight: '600', fontSize: 15 }}>{initialOf(p.name)}</Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontWeight: '600', fontSize: 17, color: colors.ink }}>{p.name}</Text>
+              <Text style={{ fontWeight: '600', fontSize: 17, color: colors.ink }}>{firstNameLastInitial(p.name)}</Text>
               <Text style={{ fontSize: 14, color: colors.inkSoft }}>{ROLE_LABEL[p.role]}</Text>
             </View>
             <Pressable
