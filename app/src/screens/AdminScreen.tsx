@@ -9,12 +9,16 @@ import { useApp } from '../store';
 import { ROLE_LABEL, ROLE_LADDER, Role, User, canManageRoles } from '../types';
 import { LockIcon } from '../components/Icons';
 
-// Pastors show as "Pastor <first name>" — e.g. "Pastor Rachel" — regardless
-// of what full name is on file.
+// Pastors show as "Pastor <first name>" — e.g. "Pastor Rachel". Everyone
+// else shows as "<first name> <last initial>" — e.g. "Travis M."
 function displayName(p: User): string {
-  if (p.role !== 'pastor') return p.name;
-  const firstName = p.name.replace(/^Pastor\s+/i, '').trim().split(/\s+/)[0] || p.name;
-  return `Pastor ${firstName}`;
+  if (p.role === 'pastor') {
+    const firstName = p.name.replace(/^Pastor\s+/i, '').trim().split(/\s+/)[0] || p.name;
+    return `Pastor ${firstName}`;
+  }
+  const parts = p.name.trim().split(/\s+/);
+  if (parts.length < 2) return parts[0] || p.name;
+  return `${parts[0]} ${parts[parts.length - 1].charAt(0).toUpperCase()}.`;
 }
 
 const MATRIX = [
