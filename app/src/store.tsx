@@ -186,6 +186,7 @@ interface AppContextValue {
   postComment: () => Promise<void>;
   toggleAnswered: (id: string) => void;
   deleteRequest: (id: string) => void;
+  releaseToLeadership: (id: string) => void;
   prayFor: (id: string) => void;
   markAllRead: () => void;
   enableNotifications: () => Promise<boolean>;
@@ -271,6 +272,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       createdAt: new Date(r.created_at).getTime(),
       answeredAt: r.answered_at ? new Date(r.answered_at).getTime() : null,
       prayedBy: prayedByRequest.get(r.id) || [],
+      releasedToLeadership: !!r.released_to_leadership,
     }));
 
     const notifications: Notification[] = (notificationsRes.data || []).map((n: any) => ({
@@ -856,6 +858,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [ui.viewingRequestId, set, say, refreshAll],
   );
 
+  const releaseToLeadership = useCallback(
+    async (id: string) => {
+      const { error } = await supabase.from('requests').update({ released_to_leadership: true }).eq('id', id);
+      if (error) {
+        say('Could not share that — try again.');
+        return;
+      }
+      await refreshAll();
+      say('Shared with the rest of the leadership team.');
+    },
+    [say, refreshAll],
+  );
+
   const prayFor = useCallback(
     async (id: string) => {
       if (!me) return;
@@ -1028,6 +1043,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     postComment,
     toggleAnswered,
     deleteRequest,
+    releaseToLeadership,
     prayFor,
     markAllRead,
     enableNotifications,

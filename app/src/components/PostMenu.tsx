@@ -9,19 +9,23 @@ import { Request } from '../types';
 
 export function PostMenu({ request, style }: { request: Request; style?: StyleProp<ViewStyle> }) {
   const insets = useSafeAreaInsets();
-  const { currentUser, deleteRequest, toggleAnswered } = useApp();
+  const { currentUser, deleteRequest, toggleAnswered, releaseToLeadership } = useApp();
   const me = currentUser!;
   const [open, setOpen] = useState(false);
 
   const canManage = me.role === 'lead_pastor' || me.role === 'owner';
   const canDelete = canManage;
   const canResolve = canManage && !request.answeredAt;
+  const canRelease = canManage && request.audience === 'pastors' && !request.releasedToLeadership;
   if (!canDelete) return null;
 
   const isPraise = request.kind === 'praise';
-  const description = canResolve
-    ? 'Resolve moves it to the answered log. Delete removes it for everyone.'
-    : 'Delete removes it for everyone.';
+  const descriptionParts = [
+    canRelease && 'Share with leadership lets the other pastors, worship minister, and agricultural minister see it too.',
+    canResolve && 'Resolve moves it to the answered log.',
+    'Delete removes it for everyone.',
+  ].filter(Boolean);
+  const description = descriptionParts.join(' ');
 
   return (
     <>
@@ -55,6 +59,15 @@ export function PostMenu({ request, style }: { request: Request; style?: StylePr
                 {request.ownerName}&rsquo;s {isPraise ? 'praise' : 'request'}
               </Text>
               <Text style={{ fontSize: 15, lineHeight: 21, color: colors.inkSoft }}>{description}</Text>
+              {canRelease && (
+                <Pill
+                  label="Share with leadership"
+                  onPress={() => {
+                    setOpen(false);
+                    releaseToLeadership(request.id);
+                  }}
+                />
+              )}
               {canResolve && (
                 <Pill
                   label="Resolve"

@@ -65,6 +65,7 @@ export interface Request {
   createdAt: number;
   answeredAt: number | null;
   prayedBy: PrayerLogEntry[];
+  releasedToLeadership: boolean;
 }
 
 export interface Comment {
