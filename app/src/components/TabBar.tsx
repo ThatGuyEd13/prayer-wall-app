@@ -1,16 +1,18 @@
 import React from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { Text } from './AppText';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../theme';
 import { useApp } from '../store';
 import { isAdminRole, isLeaderRole } from '../types';
+import { BellIcon, GearIcon, HeartIcon, HomeIcon, PersonIcon } from './Icons';
 
-const TABS: { key: 'wall' | 'pray' | 'mine' | 'notices' | 'admin'; label: string; icon: string }[] = [
-  { key: 'wall', label: 'Home', icon: '⌂' },
-  { key: 'pray', label: 'Pray', icon: '♡' },
-  { key: 'mine', label: 'Mine', icon: '●' },
-  { key: 'notices', label: 'Notices', icon: '🔔' },
-  { key: 'admin', label: 'Admin', icon: '⚙' },
+const TABS: { key: 'wall' | 'pray' | 'mine' | 'notices' | 'admin'; label: string; Icon: typeof HomeIcon }[] = [
+  { key: 'wall', label: 'Home', Icon: HomeIcon },
+  { key: 'pray', label: 'Pray', Icon: HeartIcon },
+  { key: 'mine', label: 'Mine', Icon: PersonIcon },
+  { key: 'notices', label: 'Notices', Icon: BellIcon },
+  { key: 'admin', label: 'Admin', Icon: GearIcon },
 ];
 
 export function TabBar() {
@@ -39,6 +41,7 @@ export function TabBar() {
     >
       {visible.map((t) => {
         const active = ui.tab === t.key;
+        const tint = active ? colors.clay : colors.inkSoft;
         return (
           <Pressable
             key={t.key}
@@ -53,8 +56,8 @@ export function TabBar() {
               backgroundColor: active ? 'rgba(140,98,66,.15)' : 'transparent',
             }}
           >
-            <Text style={{ fontSize: 16, color: active ? colors.clay : colors.inkSoft }}>{t.icon}</Text>
-            <Text style={{ fontSize: 11.5, fontWeight: '600', color: active ? colors.clay : colors.inkSoft }}>{t.label}</Text>
+            <t.Icon size={21} color={tint} strokeWidth={1.6} />
+            <Text style={{ fontSize: 11.5, fontWeight: '600', color: tint }}>{t.label}</Text>
           </Pressable>
         );
       })}

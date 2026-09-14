@@ -1,9 +1,11 @@
-import React, { useMemo } from 'react';
-import { Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { Linking, Modal, Pressable, ScrollView, TextInput, View } from 'react-native';
+import { Text } from './AppText';
 import { colors } from '../theme';
 import { Pill } from './Pill';
 import { useApp } from '../store';
 import { saveAndShareCsv } from '../exportCsv';
+import { connectGoogleSheets, exportToGoogleSheet } from '../googleSheets';
 
 export function AdminActionSheet() {
   const { ui, set, db, currentUser, sendBroadcast, exportCsv, transferOwnership, deleteChurch } = useApp();
@@ -17,6 +19,32 @@ export function AdminActionSheet() {
   }, [db.requests]);
 
   const transferChoices = useMemo(() => db.users.filter((u) => u.id !== me.id), [db.users, me.id]);
+
+  const [gsBusy, setGsBusy] = useState<'connect' | 'export' | null>(null);
+  const [gsMessage, setGsMessage] = useState('');
+
+  const handleConnectGoogle = async () => {
+    setGsBusy('connect');
+    setGsMessage('');
+    const result = await connectGoogleSheets();
+    setGsBusy(null);
+    setGsMessage(result.ok ? 'Connected. You can now export to Google Sheets.' : result.error || 'Something went wrong.');
+  };
+
+  const handleExportGoogle = async () => {
+    setGsBusy('export');
+    setGsMessage('');
+    const result = await exportToGoogleSheet();
+    setGsBusy(null);
+    if (result.ok && result.url) {
+      setGsMessage('Updated — opening it now.');
+      Linking.openURL(result.url);
+    } else if (result.notConnected) {
+      setGsMessage('Connect Google Sheets first (below), then try export again.');
+    } else {
+      setGsMessage(result.error || 'Export failed.');
+    }
+  };
 
   if (!modal) return null;
 
@@ -59,6 +87,20 @@ export function AdminActionSheet() {
                   set({ adminModal: null });
                 }}
               />
+              <Text style={{ fontSize: 14, color: colors.inkSoft, marginTop: 4 }}>Or keep it live in Google Sheets:</Text>
+              <Pill
+                label="Update Google Sheet"
+                onPress={handleExportGoogle}
+                loading={gsBusy === 'export'}
+                variant="outline"
+              />
+              <Pill
+                label="Connect Google Sheets"
+                onPress={handleConnectGoogle}
+                loading={gsBusy === 'connect'}
+                variant="ghost"
+              />
+              {!!gsMessage && <Text style={{ fontSize: 14, color: colors.inkSoft }}>{gsMessage}</Text>}
             </>
           )}
 

@@ -1,9 +1,11 @@
 import React from 'react';
-import { Image, Pressable, Text, View } from 'react-native';
+import { Image, Pressable, View } from 'react-native';
+import { Text } from './AppText';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../theme';
 import { useApp } from '../store';
 import { ROLE_LABEL } from '../types';
+import { BellIcon } from './Icons';
 
 const TITLES: Record<string, string> = {
   wall: 'Prayer wall',
@@ -31,7 +33,7 @@ export function Header() {
         borderBottomColor: colors.hairlineSoft,
       }}
     >
-      <Image source={require('../../assets/brand/logo.png')} style={{ height: 24, width: 24, resizeMode: 'contain' }} />
+      <Image source={require('../../assets/brand/logo-full-black.png')} style={{ height: 44, width: 44, resizeMode: 'contain' }} />
       <View style={{ flex: 1, minWidth: 0 }}>
         <Text numberOfLines={1} style={{ fontSize: 19, fontWeight: '600', letterSpacing: -0.2, color: colors.ink }}>
           {TITLES[ui.tab] || 'Prayer Wall'}
@@ -53,7 +55,7 @@ export function Header() {
           justifyContent: 'center',
         }}
       >
-        <Text style={{ fontSize: 16 }}>🔔</Text>
+        <BellIcon size={19} color={colors.inkSoft} />
         {unread > 0 && (
           <View
             style={{

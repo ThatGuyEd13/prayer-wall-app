@@ -1,17 +1,19 @@
 import React from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
+import { Text } from '../components/AppText';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../theme';
 import { Keypad } from '../components/Keypad';
 import { Pill } from '../components/Pill';
-import { useApp } from '../store';
+import { LockIcon } from '../components/Icons';
+import { pinLengthFor, useApp } from '../store';
 
 export function SetPinScreen() {
   const insets = useSafeAreaInsets();
   const { ui, setPinPress, backToSignin } = useApp();
   const stage = ui.setPinStage;
   const entry = stage === 'first' ? ui.setPinEntry : ui.setPinConfirm;
-  const target = 5;
+  const target = pinLengthFor(ui.pendingName);
 
   return (
     <View
@@ -23,9 +25,12 @@ export function SetPinScreen() {
         paddingBottom: insets.bottom + 22,
       }}
     >
-      <Text style={{ fontSize: 11, fontWeight: '600', letterSpacing: 2, textTransform: 'uppercase', color: colors.clayLight }}>
-        Set up pastoral access
-      </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9 }}>
+        <LockIcon size={17} color={colors.clayLight} strokeWidth={1.7} />
+        <Text style={{ fontSize: 11, fontWeight: '500', letterSpacing: 2, textTransform: 'uppercase', color: colors.clayLight }}>
+          Set up pastoral access
+        </Text>
+      </View>
       <Text style={{ fontSize: 28, fontWeight: '600', letterSpacing: -0.3, marginTop: 14, color: '#f8f4ec' }}>
         {stage === 'first' ? 'Choose a 5-digit PIN' : 'Confirm your PIN'}
       </Text>
