@@ -10,9 +10,13 @@ import { ROLE_LABEL, ROLE_LADDER, Role, User, canManageRoles } from '../types';
 import { LockIcon } from '../components/Icons';
 
 // Pastors show as "Pastor <first name>" — e.g. "Pastor Rachel". Everyone
-// else shows as "<first name> <last initial>" — e.g. "Travis M."
+// else shows as "<first name> <last initial>" — e.g. "Travis M." A name
+// already stored as "Pastor <name>" always gets the pastor treatment, even
+// if the account's role isn't literally 'pastor' (e.g. lead pastor) — that
+// prefix is a title on the name itself, not a plain first/last name to
+// truncate.
 function displayName(p: User): string {
-  if (p.role === 'pastor') {
+  if (p.role === 'pastor' || /^Pastor\s+/i.test(p.name)) {
     const firstName = p.name.replace(/^Pastor\s+/i, '').trim().split(/\s+/)[0] || p.name;
     return `Pastor ${firstName}`;
   }
